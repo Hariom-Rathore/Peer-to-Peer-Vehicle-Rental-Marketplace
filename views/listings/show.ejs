@@ -1,25 +1,23 @@
 <% layout("/listings/layouts/boilerplate") %>
 
-  <body>
-    <h3 class="show-heading">Listing detail:</h3>
+<h3 class="show-heading">Listing detail:</h3>
 
-    <div class="card mt-3 show-card">
-      <img
-        src="<%= listing.image?.url || listing.image || 'https://images.pexels.com/photos/11129937/pexels-photo-11129937.jpeg' %>"
-        class="card-img-top show-img" alt="listing_image">
-      <div class="card-body show-body">
-        <p class="card-text show-title"><b><%= listing.title %></b></p>
-        <p class="show-line"><%= listing.description %></p>
-        <p class="show-line">&#8377; <%= listing.price.toLocaleString("en-IN") %></p>
-        <p class="show-line"><%= listing.location %></p>
-        <p class="show-line"><%= listing.country %></p>
-      </div>
-    </div>
+<div class="card mt-3 show-card">
+  <img
+    src="<%= listing.image?.url || listing.image || 'https://images.pexels.com/photos/11129937/pexels-photo-11129937.jpeg' %>"
+    class="card-img-top show-img" alt="listing_image">
+  <div class="card-body show-body">
+    <p class="card-text show-title"><b><%= listing.title %></b></p>
+    <p class="show-line"><%= listing.description %></p>
+    <p class="show-line">&#8377; <%= listing.price != null ? listing.price.toLocaleString("en-IN") : "Price not available" %></p>
+    <p class="show-line"><%= listing.location %></p>
+    <p class="show-line"><%= listing.country %></p>
+  </div>
+</div>
 
-    <div class="show-actions">
-      <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark">Edit</a>
-      <form method="post" action="/listings/<%= listing._id %>?_method=DELETE" class="show-delete-form">
-        <button class="btn btn-danger">Delete</button>
-      </form>
-    </div>
-  </body>
+<div class="show-actions">
+  <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark">Edit</a>
+  <form method="post" action="/listings/<%= listing._id %>?_method=DELETE" class="show-delete-form">
+    <button class="btn btn-danger">Delete</button>
+  </form>
+</div>

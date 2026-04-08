@@ -21,7 +21,11 @@ const listingSchema = new Schema({
             : v,
       },
     },
-    price:Number,
+    price:{
+      type:Number,
+      required:true,
+      min:0,
+    },
     location:String,
     country:String,
 });
