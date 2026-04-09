@@ -8,11 +8,12 @@ const ejsMate=require("ejs-mate");
 const ExpressError=require("./utils/ExpressError.js");                                               //this is usefor when some template are same for all router(pages) like a navbar
 
 const methodOverride=require("method-override");
+const {listingSchema}= require("./schema.js");
 
 const emptyListing = {
     title: "",
     description: "",
-    image: { url: "" },
+    image: { url: "", filename: "listingimage" },
     price: "",
     country: "",
     location: "",
@@ -30,14 +31,17 @@ const buildListingData = (incomingListing = {}) => ({
 const validateListing = (req, res, next) => {
     const incomingListing = req.body.listing || {};
     const listingData = buildListingData(incomingListing);
-    const parsedPrice = Number(listingData.price);
+    const { error, value } = listingSchema.validate(
+        { listing: listingData },
+        { abortEarly: false, convert: true }
+    );
 
-    if (listingData.price === "" || Number.isNaN(parsedPrice) || !Number.isInteger(parsedPrice)) {
-        return next(new ExpressError(400, "Price must be an integer number.", { listing: listingData }));
+    if (error) {
+        const errorMsg = error.details.map((detail) => detail.message).join(", ");
+        return next(new ExpressError(400, errorMsg, { listing: listingData }));
     }
 
-    listingData.price = parsedPrice;
-    req.listingData = listingData;
+    req.listingData = buildListingData(value.listing);
     next();
 };
 
@@ -87,11 +91,13 @@ app.get("/listings/new",async(req,res,next)=>{
 
 app.post("/listings", validateListing,async(req,res,next)=>{
     try{
-        const newListing = new Listing(req.listingData);
+       
+     const newListing = new Listing(req.listingData);
         await newListing.save();
         res.redirect("/listings");
     } catch(err){
         err.viewData = err.viewData || { listing: req.listingData || emptyListing };
+        
         next(err);
     }
 });
