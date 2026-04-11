@@ -1,5 +1,7 @@
 const mongoose= require("mongoose");
+const review = require("./review");
 const Schema=mongoose.Schema;  //ek variable bana lenge joo baar use nahi karna pade
+const Review = require("./review.js");
 
 const listingSchema = new Schema({
     title:{
@@ -28,7 +30,21 @@ const listingSchema = new Schema({
     },
     location:String,
     country:String,
+    reviews:[
+      {
+        type:Schema.Types.ObjectId,
+        ref:"Review",
+      },
+    ],
 });
+
+listingSchema.post("findOneAndDelete",async(listing)=>{
+  if(listing){
+    await review.deleteMany({_id:{$in:listing.reviews}});
+  }
+}); 
+
+
 
 const Listing=mongoose.model("Listing",listingSchema);
 module.exports=Listing;

@@ -1,23 +1,70 @@
 <% layout("/listings/layouts/boilerplate") %>
 
-<h3 class="show-heading">Listing detail:</h3>
+  <h3 class="show-heading">
+    <%= listing.title %>
+  </h3>
 
-<div class="card mt-3 show-card">
-  <img
-    src="<%= listing.image?.url || listing.image || 'https://images.pexels.com/photos/11129937/pexels-photo-11129937.jpeg' %>"
-    class="card-img-top show-img" alt="listing_image">
-  <div class="card-body show-body">
-    <p class="card-text show-title"><b><%= listing.title %></b></p>
-    <p class="show-line"><%= listing.description %></p>
-    <p class="show-line">&#8377; <%= listing.price != null ? listing.price.toLocaleString("en-IN") : "Price not available" %></p>
-    <p class="show-line"><%= listing.location %></p>
-    <p class="show-line"><%= listing.country %></p>
+  <div class="card mt-3 show-card listing-card">
+    <img
+      src="<%= listing.image?.url || listing.image || 'https://images.pexels.com/photos/11129937/pexels-photo-11129937.jpeg' %>"
+      class="card-img-top show-img" alt="listing_image">
+    <div class="card-body show-body">
+
+      <p class="show-line">
+        <%= listing.description %>
+      </p>
+      <p class="show-line">&#8377; <%= listing.price !=null ? listing.price.toLocaleString("en-IN")
+          : "Price not available" %>
+      </p>
+      <p class="show-line">
+        <%= listing.location %>
+      </p>
+      <p class="show-line">
+        <%= listing.country %>
+      </p>
+    </div>
+  </div>
+
+  <div class="show-actions">
+    <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark">Edit</a>
+    <form method="post" action="/listings/<%= listing._id %>?_method=DELETE" class="show-delete-form">
+      <button class="btn btn-danger">Delete</button>
+    </form>
+  </div>
+
+  // make a form for submit the rating
+
+  <div class="col-8 offset">
+    <hr>
+    <h4>Leave a Review</h4>
+    <form action="/listings/<%= listing.id%>/reviews" method="POST" class="mb-3 needs-validation" novalidate>
+      <div class="mb-3 mt-3">
+        <label for="rating" class="form-label">Rating</label>
+        <input type="range" min="1" max="5" id="rating" name="review[rating]" class="form-range">
+      </div>
+      <div class="mb-3 mt-3">
+        <label for="comment" class="form-label">Comments</label>
+        <textarea name="review[comment]" id="comment" cols="30" rows="5" class="form-control" required></textarea>
+        <div class="invalid-feedback">Please add comments for review</div>
+      </div>
+      <button class="btn btn-outline-dark">Submit</button>
+    </form>
+<hr>
+
+    <p><b>All Reviews</b></p>
+    <div class="row">
+    <% for(review of listing.reviews){%>
+<div class="card col-5 ms-3 mb-3">
+  <div class="card-body">
+    <h5 class="card-title">Hariom</h5>
+    <p class="card-text"><%=review.comment%></p>
+      <p class="card-text"><%=review.rating%>stars</p>
+      <form class="mb-3" method="POST" action="/listings/<%= listing._id %>/reviews/<%=review._id%>?_method=DELETE">
+        <button class="btn btn-sm btn-dark">Delete</button>
+      </form>
   </div>
 </div>
-
-<div class="show-actions">
-  <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark">Edit</a>
-  <form method="post" action="/listings/<%= listing._id %>?_method=DELETE" class="show-delete-form">
-    <button class="btn btn-danger">Delete</button>
-  </form>
-</div>
+    <%}%>
+    <br>
+  </div>
+  </div>

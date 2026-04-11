@@ -4,11 +4,12 @@ const mongoose= require("mongoose");
 const MONGO_URL="mongodb://127.0.0.1:27017/wanderlust";  //THIS IS add for mongodb database and databse name is wanderlust
 const path =require("path");
 const Listing=require("./models/listing.js");
+const Review=require("./models/review.js");
 const ejsMate=require("ejs-mate");  
 const ExpressError=require("./utils/ExpressError.js");                                               //this is usefor when some template are same for all router(pages) like a navbar
 
 const methodOverride=require("method-override");
-const {listingSchema}= require("./schema.js");
+const {listingSchema,reviewSchema}= require("./schema.js");     
 
 const emptyListing = {
     title: "",
@@ -28,23 +29,28 @@ const buildListingData = (incomingListing = {}) => ({
     },
 });
 
+
+//make according to joi for  server side all things work systematically and i am use on teh router only this function name
+
+const validateReview = (req, res, next) => {
+    let{error}=reviewSchema.validate(req.body);
+    if(error){
+        let errMsg =error.details.map((el)=>el.message).join(",");
+        throw new ExpressError(400,errMsg);
+        }else{next();
+
+        }   
+     };
+
 const validateListing = (req, res, next) => {
-    const incomingListing = req.body.listing || {};
-    const listingData = buildListingData(incomingListing);
-    const { error, value } = listingSchema.validate(
-        { listing: listingData },
-        { abortEarly: false, convert: true }
-    );
+    let{error}=listingSchema.validate(req.body);
+    if(error){
+        let errMsg =error.details.map((el)=>el.message).join(",");
+        throw new ExpressError(400,errMsg);
+        }else{next();
 
-    if (error) {
-        const errorMsg = error.details.map((detail) => detail.message).join(", ");
-        return next(new ExpressError(400, errorMsg, { listing: listingData }));
-    }
-
-    req.listingData = buildListingData(value.listing);
-    next();
-};
-
+        }   
+     };
 main()
 .then(()=>{
     console.log("connected to Db");
@@ -146,11 +152,41 @@ app.delete("/listings/:id",async(req,res,next)=>{
     }
 });
 
-//read data(show data)
+//Reviews(post route because listing ke sath dekhenge reviews ko)
+app.post("/listings/:id/reviews",validateReview,async(req,res)=>{
+let listing = await Listing.findById(req.params.id);
+let newReview= new Review(req.body.review);
+listing.reviews.push(newReview);
+
+await newReview.save();
+await listing.save();
+console.log(req.body);
+res.redirect(`/listings/${listing._id}`);
+});
+
+
+
+app.delete("/listings/:id/reviews/:reviewId", async (req, res) => {
+  let { id, reviewId } = req.params;
+
+  // Remove review reference from listing
+  await Listing.findByIdAndUpdate(id, {
+    $pull: { reviews: reviewId }
+  });
+
+  // Delete review from Review collection
+  await Review.findByIdAndDelete(reviewId);
+
+  res.redirect(`/listings/${id}`);
+});
+
+
+
+//show route     read data(show data)
 app.get("/listings/:id",async(req,res,next)=>{
     try{
         let{id}=req.params;
-        const listing= await Listing.findById(id);
+        const listing= await Listing.findById(id).populate("reviews");
         if(!listing){
             throw new ExpressError(404,"Listing not found!");
         }
