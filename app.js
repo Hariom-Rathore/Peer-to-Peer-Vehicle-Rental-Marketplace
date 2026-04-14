@@ -41,7 +41,6 @@ const buildListingData = (incomingListing = {}) => ({
 
 main()
 .then(()=>{
-    console.log("connected to Db");
 })
 .catch((err)=>{
     console.log(err); 
@@ -66,7 +65,6 @@ app.engine('ejs',ejsMate);  //for ejs mate templeting
 
 app.use("/listings",listings);//listings and /listings/:id/reviews this is common part into the all router so this fixed first and after place of this use only /
 app.use("/listings/:id/reviews",reviews);
-
 
 
 
