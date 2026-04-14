@@ -9,12 +9,24 @@ const ejsMate=require("ejs-mate");
 const ExpressError=require("./utils/ExpressError.js");                                               //this is usefor when some template are same for all router(pages) like a navbar
 
 const methodOverride=require("method-override");
+const session = require("express-session");
+const flash = require("connect-flash");
  
 
 
-const listings= require("./routes/listing.js"); 
+const listings= require("./routes/listing.js"); //this is router
 const reviews=require("./routes/review.js");
+const userRouter=require("./routes/user.js");
 
+const passport=require("passport");
+const localStrategy=require("passport-local");
+const User= require("./models/user.js");
+
+const sessionOptions = {
+    secret: "mysupersecretcode",
+    resave: false,
+    saveUninitialized: false,
+};
 
 
 const emptyListing = {
@@ -63,9 +75,35 @@ app.use(express.static(path.join(__dirname,"/public")));
 
 app.engine('ejs',ejsMate);  //for ejs mate templeting
 
+app.use(session(sessionOptions));
+app.use(flash());
+app.use((req, res, next) => {
+    res.locals.success = req.flash("success");
+    res.locals.error = req.flash("error");
+    next();
+});
+
+app.use(passport.initialize());
+app.use(passport.session());//ek session me kam hona chahiye isliye use karte h
+passport.use(new localStrategy(User.authenticate()));
+
+passport.serializeUser(User.serializeUser()); //ek baar session start kar diya too baar bar login karna nahi padega
+passport.deserializeUser(User.deserializeUser());//ek session khatam hote hi remove karne ke liye
+
+//make a demo user for checking all things works 
+// app.get("/demouser",async(req,res)=>{
+//     let fakeUser=new User({
+//     email:"student@gmail.com",
+//     username:"college-student" //this automaticlay invoked by the mongoose package
+
+// })
+// let registeredUser=await User.register(fakeUser,"helloworld"); //username and password
+// res.send(registeredUser);
+// });
+
 app.use("/listings",listings);//listings and /listings/:id/reviews this is common part into the all router so this fixed first and after place of this use only /
 app.use("/listings/:id/reviews",reviews);
-
+app.use("/",userRouter);
 
 
 //show route     read data(show data)

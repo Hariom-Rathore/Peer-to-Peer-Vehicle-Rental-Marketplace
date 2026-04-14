@@ -1,3 +1,23 @@
+html,
+body {
+    height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-content {
+    flex: 1 0 auto;
+}
+
+footer {
+    margin-top: auto;
+    flex-shrink: 0;
+}
+
 /*navbar*/
 
 .navbar{
@@ -127,10 +147,34 @@ width: 100%;
 }
 
 .show-title {
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.75rem;
+    font-weight: 600;
+}
+
+.show-title-top {
+    padding: 1rem 1rem 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.75rem;
+    font-weight: 600;
 }
 
 .show-line {
     margin-bottom: 0.3rem;
     line-height: 1.2;
+}
+
+/* Reviews Section */
+.reviews-section {
+    max-width: 40rem;
+    margin: 2rem auto 0;
+}
+
+.review-card .card-text {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+.review-card {
+    width: 100%;
 }
