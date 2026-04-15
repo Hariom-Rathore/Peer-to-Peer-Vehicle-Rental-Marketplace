@@ -77,18 +77,19 @@ app.engine('ejs',ejsMate);  //for ejs mate templeting
 
 app.use(session(sessionOptions));
 app.use(flash());
-app.use((req, res, next) => {
-    res.locals.success = req.flash("success");
-    res.locals.error = req.flash("error");
-    next();
-});
-
 app.use(passport.initialize());
 app.use(passport.session());//ek session me kam hona chahiye isliye use karte h
 passport.use(new localStrategy(User.authenticate()));
 
 passport.serializeUser(User.serializeUser()); //ek baar session start kar diya too baar bar login karna nahi padega
 passport.deserializeUser(User.deserializeUser());//ek session khatam hote hi remove karne ke liye
+
+app.use((req, res, next) => {
+    res.locals.success = req.flash("success");
+    res.locals.error = req.flash("error");
+    res.locals.currUser = req.user;
+    next();
+});
 
 //make a demo user for checking all things works 
 // app.get("/demouser",async(req,res)=>{
@@ -110,7 +111,10 @@ app.use("/",userRouter);
 app.get("/listings/:id",async(req,res,next)=>{
     try{
         let{id}=req.params;
-        const listing= await Listing.findById(id).populate("reviews");
+        // Change note: owner populate added so UI can show listing owner's username.
+        const listing= await Listing.findById(id)
+            .populate("owner")
+            .populate("reviews");
         if(!listing){
             throw new ExpressError(404,"Listing not found!");
         }

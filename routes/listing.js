@@ -56,6 +56,7 @@ router.post("/", isLoggedIn, validateListing, async (req, res, next) => {
     try {
         req.listingData = buildListingData(req.body.listing);
         const newListing = new Listing(req.listingData);
+        newListing.owner = req.user._id;
         await newListing.save();
         res.redirect("/listings");
     } catch (err) {

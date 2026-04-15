@@ -12,6 +12,10 @@
       <p class="show-line">
         <%= listing.description %>
       </p>
+      <!-- Change note: owner username is now shown from populated listing.owner -->
+      <p class="show-line">
+        <b>Owner:</b> <%= listing.owner?.username || "Unknown Owner" %>
+      </p>
       <p class="show-line">&#8377; <%= listing.price !=null ? listing.price.toLocaleString("en-IN")
           : "Price not available" %>
       </p>
