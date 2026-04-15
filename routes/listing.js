@@ -5,6 +5,7 @@ const router = express.Router();  //express router
 const { listingSchema } = require("../schema.js");
 const ExpressError = require("../utils/ExpressError.js");
 const Listing = require("../models/listing.js");
+const { isLoggedIn } = require("../utils/middleware.js");
 
 const emptyListing = {
     title: "",
@@ -45,13 +46,13 @@ router.get("/", async (req, res, next) => {
     }
 });
 
-// new route
-router.get("/new", (req, res) => {
+// new route  (isloogedin is difine into the middleware.js)
+router.get("/new", isLoggedIn, (req, res) => {
     res.render("listings/new.ejs", { listing: emptyListing, errorMsg: null });
 });
 
 // create route
-router.post("/", validateListing, async (req, res, next) => {
+router.post("/", isLoggedIn, validateListing, async (req, res, next) => {
     try {
         req.listingData = buildListingData(req.body.listing);
         const newListing = new Listing(req.listingData);
@@ -64,7 +65,7 @@ router.post("/", validateListing, async (req, res, next) => {
 });
 
 // edit route
-router.get("/:id/edit", async (req, res, next) => {
+router.get("/:id/edit", isLoggedIn, async (req, res, next) => {
     try {
         const { id } = req.params;
         const listing = await Listing.findById(id);
@@ -78,7 +79,7 @@ router.get("/:id/edit", async (req, res, next) => {
 });
 
 // update route
-router.put("/:id", validateListing, async (req, res, next) => {
+router.put("/:id", isLoggedIn, validateListing, async (req, res, next) => {
     try {
         const { id } = req.params;
         req.listingData = buildListingData(req.body.listing);
@@ -99,7 +100,7 @@ router.put("/:id", validateListing, async (req, res, next) => {
 });
 
 // delete route
-router.delete("/:id", async (req, res, next) => {
+router.delete("/:id", isLoggedIn, async (req, res, next) => {
     try {
         const { id } = req.params;
         const deleteListing = await Listing.findByIdAndDelete(id);

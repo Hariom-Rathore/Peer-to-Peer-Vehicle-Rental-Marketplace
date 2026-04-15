@@ -38,9 +38,10 @@ router.get("/login",(req,res)=>{
 //ye phle authnticate karega ki user  h ya nahi this make a passport middleware
 router.post("/login",passport.authenticate("local",{
    failureRedirect:"/login",
-failureFalsh:true,}),
+failureFlash:true,}),
 async(req,res)=>{
-res.send("welcome to wanderlust!")
+req.flash("success","welcome back to wanderlust");
+res.redirect("/listings"); 
 }
 );
 
