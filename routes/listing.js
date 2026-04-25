@@ -2,10 +2,8 @@
 
 const express = require("express");
 const router = express.Router();  //express router
-const { listingSchema } = require("../schema.js");
-const ExpressError = require("../utils/ExpressError.js");
 const Listing = require("../models/listing.js");
-const { isLoggedIn } = require("../utils/middleware.js");
+const { isLoggedIn,isOwner,validateListing } = require("../utils/middleware.js");
 
 const emptyListing = {
     title: "",
@@ -25,16 +23,6 @@ const buildListingData = (incomingListing = {}) => ({
     },
 });
 
-const validateListing = (req, res, next) => {
-    const { error } = listingSchema.validate(req.body);
-    if (error) {
-        const errMsg = error.details.map((el) => el.message).join(",");
-        const err = new ExpressError(400, errMsg);
-        err.viewData = { listing: buildListingData(req.body.listing) };
-        throw err;
-    }
-    next();
-};
 
 // index route
 router.get("/", async (req, res, next) => {
@@ -66,7 +54,7 @@ router.post("/", isLoggedIn, validateListing, async (req, res, next) => {
 });
 
 // edit route
-router.get("/:id/edit", isLoggedIn, async (req, res, next) => {
+router.get("/:id/edit", isLoggedIn,isOwner, async (req, res, next) => {
     try {
         const { id } = req.params;
         const listing = await Listing.findById(id);
@@ -80,7 +68,7 @@ router.get("/:id/edit", isLoggedIn, async (req, res, next) => {
 });
 
 // update route
-router.put("/:id", isLoggedIn, validateListing, async (req, res, next) => {
+router.put("/:id", isLoggedIn,isOwner, validateListing, async (req, res, next) => {
     try {
         const { id } = req.params;
         req.listingData = buildListingData(req.body.listing);
@@ -101,7 +89,7 @@ router.put("/:id", isLoggedIn, validateListing, async (req, res, next) => {
 });
 
 // delete route
-router.delete("/:id", isLoggedIn, async (req, res, next) => {
+router.delete("/:id", isLoggedIn, isOwner,async (req, res, next) => {
     try {
         const { id } = req.params;
         const deleteListing = await Listing.findByIdAndDelete(id);
