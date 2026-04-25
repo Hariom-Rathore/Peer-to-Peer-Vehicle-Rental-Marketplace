@@ -63,7 +63,7 @@ await mongoose.connect(MONGO_URL);
 }
 
 app.get("/",(req,res)=>{
-    res.send("HII I am root");
+    res.redirect("/listings");
 });
 
 app.set("view engine","ejs");
@@ -106,23 +106,6 @@ app.use("/listings",listings);//listings and /listings/:id/reviews this is commo
 app.use("/listings/:id/reviews",reviews);
 app.use("/",userRouter);
 
-
-//show route     read data(show data)
-app.get("/listings/:id",async(req,res,next)=>{
-    try{
-        let{id}=req.params;
-        // Change note: owner populate added so UI can show listing owner's username.
-        const listing= await Listing.findById(id)
-            .populate("owner")
-            .populate("reviews");
-        if(!listing){
-            throw new ExpressError(404,"Listing not found!");
-        }
-        res.render("listings/show.ejs",{listing});
-    } catch(err){
-        next(err);
-    }
-});
 
 app.all(/.*/,(req,res,next)=>{
     next(new ExpressError(404,"Page not found!"));

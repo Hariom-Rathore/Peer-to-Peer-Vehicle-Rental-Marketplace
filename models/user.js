@@ -13,4 +13,4 @@ const userSchema= new Schema({
 
 userSchema.plugin(passportLocalMongoose);  //its automaticlay store hashed password and salt value into the username
 
-module.exports=mongoose.model("user",userSchema);
+module.exports=mongoose.model("User",userSchema);

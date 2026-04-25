@@ -3,6 +3,7 @@
 const express = require("express");
 const router = express.Router();  //express router
 const Listing = require("../models/listing.js");
+const User = require("../models/user.js");
 const { isLoggedIn,isOwner,validateListing } = require("../utils/middleware.js");
 
 const emptyListing = {
@@ -12,7 +13,7 @@ const emptyListing = {
     price: "",
     country: "",
     location: "",
-};
+}; 
 
 const buildListingData = (incomingListing = {}) => ({
     ...emptyListing,
@@ -97,6 +98,25 @@ router.delete("/:id", isLoggedIn, isOwner,async (req, res, next) => {
             throw new ExpressError(404, "Listing not found!");
         }
         res.redirect("/listings");
+    } catch (err) {
+        next(err);
+    }
+});
+
+// show route - display listing with reviews populated with author info
+router.get("/:id", async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const listing = await Listing.findById(id)
+            .populate("owner")
+            .populate({
+                path: "reviews",
+                populate: { path: "author" }
+            });
+        if (!listing) {
+            throw new ExpressError(404, "Listing not found!");
+        }
+        res.render("listings/show.ejs", { listing });
     } catch (err) {
         next(err);
     }

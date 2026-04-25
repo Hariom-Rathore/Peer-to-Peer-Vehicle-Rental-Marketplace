@@ -1,5 +1,6 @@
 //this file make for authenticate the user that user is login h ya nahi 
 const Listing = require("../models/listing.js");
+const Review= require("../models/review");
 const { listingSchema, reviewSchema } = require("../schema.js");
 const ExpressError = require("../utils/ExpressError.js");
 
@@ -79,3 +80,19 @@ module.exports.validateReview = (req, res, next) => {
           next();
         }   
      };
+
+     module.exports.isReviewAuthor= async (req, res, next) => {
+    const { id,reviewId } = req.params;
+    const review= await Review.findById(reviewId);
+
+    if (!review) {
+        req.flash("error", "Review not found");
+        return res.redirect(`/listings/${id}`);
+    }
+
+    if (!req.user || !review.author.equals(req.user._id)) {
+        req.flash("error", "you did not create this review");
+        return res.redirect(`/listings/${id}`);
+    }
+    next();
+};

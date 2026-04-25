@@ -3,7 +3,7 @@ const router = express.Router({ mergeParams: true });//parent route bhi use hote
 const ExpressError = require("../utils/ExpressError.js");
 const Review = require("../models/review.js");
 const Listing = require("../models/listing.js");
-const { isLoggedIn, validateReview } = require("../utils/middleware.js");
+const { isLoggedIn, validateReview, isReviewAuthor } = require("../utils/middleware.js");
 
 
 //Reviews(post route because listing ke sath dekhenge reviews ko)
@@ -26,7 +26,7 @@ router.post("/", isLoggedIn, validateReview, async (req, res, next) => {
 });
 
 
-router.delete("/:reviewId", async (req, res, next) => {
+router.delete("/:reviewId",isLoggedIn,isReviewAuthor, async (req, res, next) => {
   try {
     let { id, reviewId } = req.params;
 
