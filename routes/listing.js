@@ -2,124 +2,29 @@
 
 const express = require("express");
 const router = express.Router();  //express router
-const Listing = require("../models/listing.js");
-const User = require("../models/user.js");
 const { isLoggedIn,isOwner,validateListing } = require("../utils/middleware.js");
-
-const emptyListing = {
-    title: "",
-    description: "",
-    image: { url: "", filename: "listingimage" },
-    price: "",
-    country: "",
-    location: "",
-}; 
-
-const buildListingData = (incomingListing = {}) => ({
-    ...emptyListing,
-    ...incomingListing,
-    image: {
-        ...emptyListing.image,
-        ...(incomingListing.image || {}),
-    },
-});
+const listings = require("../controllers/listing.js");
 
 
 // index route
-router.get("/", async (req, res, next) => {
-    try {
-        const alllistings = await Listing.find({});
-        res.render("listings/index.ejs", { alllistings });
-    } catch (err) {
-        next(err);
-    }
-});
+router.get("/", listings.index);
 
 // new route  (isloogedin is difine into the middleware.js)
-router.get("/new", isLoggedIn, (req, res) => {
-    res.render("listings/new.ejs", { listing: emptyListing, errorMsg: null });
-});
+router.get("/new", isLoggedIn, listings.renderNewForm);
 
 // create route
-router.post("/", isLoggedIn, validateListing, async (req, res, next) => {
-    try {
-        req.listingData = buildListingData(req.body.listing);
-        const newListing = new Listing(req.listingData);
-        newListing.owner = req.user._id;
-        await newListing.save();
-        res.redirect("/listings");
-    } catch (err) {
-        err.viewData = err.viewData || { listing: req.listingData || emptyListing };
-        next(err);
-    }
-});
+router.post("/", isLoggedIn, validateListing, listings.createListing);
 
 // edit route
-router.get("/:id/edit", isLoggedIn,isOwner, async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const listing = await Listing.findById(id);
-        if (!listing) {
-            throw new ExpressError(404, "Listing not found!");
-        }
-        res.render("listings/edit.ejs", { listing });
-    } catch (err) {
-        next(err);
-    }
-});
+router.get("/:id/edit", isLoggedIn,isOwner, listings.renderEditForm);
 
 // update route
-router.put("/:id", isLoggedIn,isOwner, validateListing, async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        req.listingData = buildListingData(req.body.listing);
-        const updatedListing = await Listing.findByIdAndUpdate(id, req.listingData, {
-            new: true,
-            runValidators: true,
-        });
-        if (!updatedListing) {
-            throw new ExpressError(404, "Listing not found!");
-        }
-        res.redirect(`/listings/${id}`);
-    } catch (err) {
-        err.viewData = err.viewData || {
-            listing: { ...(req.listingData || emptyListing), _id: req.params.id },
-        };
-        next(err);
-    }
-});
+router.put("/:id", isLoggedIn,isOwner, validateListing, listings.updateListing);
 
 // delete route
-router.delete("/:id", isLoggedIn, isOwner,async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const deleteListing = await Listing.findByIdAndDelete(id);
-        if (!deleteListing) {
-            throw new ExpressError(404, "Listing not found!");
-        }
-        res.redirect("/listings");
-    } catch (err) {
-        next(err);
-    }
-});
+router.delete("/:id", isLoggedIn, isOwner, listings.deleteListing);
 
 // show route - display listing with reviews populated with author info
-router.get("/:id", async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const listing = await Listing.findById(id)
-            .populate("owner")
-            .populate({
-                path: "reviews",
-                populate: { path: "author" }
-            });
-        if (!listing) {
-            throw new ExpressError(404, "Listing not found!");
-        }
-        res.render("listings/show.ejs", { listing });
-    } catch (err) {
-        next(err);
-    }
-});
+router.get("/:id", listings.showListing);
 
 module.exports = router;
