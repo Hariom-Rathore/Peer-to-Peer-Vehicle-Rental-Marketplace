@@ -1,5 +1,3 @@
-//this is into the controller file for making a mvc framework(matlab iske ander sara backend ka code likha jayega)
-
 const Listing = require("../models/listing.js");
 const ExpressError = require("../utils/ExpressError.js");
 
@@ -21,92 +19,95 @@ const buildListingData = (incomingListing = {}) => ({
     },
 });
 
-module.exports.index = async (req, res, next) => {
-    try {
-        const alllistings = await Listing.find({});
-        res.render("listings/index.ejs", { alllistings });
-    } catch (err) {
-        next(err);
-    }
+module.exports.index = async (req, res) => {
+    const alllistings = await Listing.find({}).populate("owner");
+    res.render("listings/index.ejs", { alllistings });
 };
 
 module.exports.renderNewForm = (req, res) => {
-    res.render("listings/new.ejs", { listing: emptyListing, errorMsg: null });
+    res.render("listings/new.ejs", {
+        listing: emptyListing,
+        errorMsg: null,
+    });
 };
 
-module.exports.createListing = async (req, res, next) => {
-    try {
-        req.listingData = buildListingData(req.body.listing);
-        const newListing = new Listing(req.listingData);
-        newListing.owner = req.user._id;
-        await newListing.save();
-        res.redirect("/listings");
-    } catch (err) {
-        err.viewData = err.viewData || { listing: req.listingData || emptyListing };
-        next(err);
-    }
-};
+module.exports.createListing = async (req, res) => {
+    const listingData = buildListingData(req.body.listing);
 
-module.exports.renderEditForm = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const listing = await Listing.findById(id);
-        if (!listing) {
-            throw new ExpressError(404, "Listing not found!");
-        }
-        res.render("listings/edit.ejs", { listing });
-    } catch (err) {
-        next(err);
-    }
-};
-
-module.exports.updateListing = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        req.listingData = buildListingData(req.body.listing);
-        const updatedListing = await Listing.findByIdAndUpdate(id, req.listingData, {
-            new: true,
-            runValidators: true,
-        });
-        if (!updatedListing) {
-            throw new ExpressError(404, "Listing not found!");
-        }
-        res.redirect(`/listings/${id}`);
-    } catch (err) {
-        err.viewData = err.viewData || {
-            listing: { ...(req.listingData || emptyListing), _id: req.params.id },
+    if (req.file) {
+        listingData.image = {
+            url: req.file.path,
+            filename: req.file.filename,
         };
-        next(err);
     }
+
+    const listing = new Listing(listingData);
+    listing.owner = req.user._id;
+    listing.image={url,filename};
+    
+
+
+    await listing.save();
+    req.flash("success", "New listing created!");
+    res.redirect(`/listings/${listing._id}`);
 };
 
-module.exports.deleteListing = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const deleteListing = await Listing.findByIdAndDelete(id);
-        if (!deleteListing) {
-            throw new ExpressError(404, "Listing not found!");
-        }
-        res.redirect("/listings");
-    } catch (err) {
-        next(err);
+module.exports.showListing = async (req, res) => {
+    const { id } = req.params;
+    const listing = await Listing.findById(id)
+        .populate("owner")
+        .populate({ path: "reviews", populate: { path: "author" } });
+
+    if (!listing) {
+        throw new ExpressError(404, "Listing not found!");
     }
+
+    res.render("listings/show.ejs", { listing });
 };
 
-module.exports.showListing = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const listing = await Listing.findById(id)
-            .populate("owner")
-            .populate({
-                path: "reviews",
-                populate: { path: "author" }
-            });
-        if (!listing) {
-            throw new ExpressError(404, "Listing not found!");
-        }
-        res.render("listings/show.ejs", { listing });
-    } catch (err) {
-        next(err);
+module.exports.renderEditForm = async (req, res) => {
+    const { id } = req.params;
+    const listing = await Listing.findById(id);
+
+    if (!listing) {
+        throw new ExpressError(404, "Listing not found!");
     }
+
+    res.render("listings/edit.ejs", { listing });
+};
+
+module.exports.updateListing = async (req, res) => {
+    const { id } = req.params;
+    const listingData = buildListingData(req.body.listing);
+
+    if (req.file) {
+        listingData.image = {
+             url: req.file.path,
+            filename: req.file.filename,
+        };
+    }
+
+    const listing = await Listing.findByIdAndUpdate(id, listingData, {
+        runValidators: true,
+        new: true,
+    });
+
+    if (!listing) {
+        throw new ExpressError(404, "Listing not found!");
+    }
+
+    req.flash("success", "Listing updated successfully!");
+    res.redirect(`/listings/${listing._id}`);
+};
+
+module.exports.deleteListing = async (req, res) => {
+    const { id } = req.params;
+    const listing = await Listing.findByIdAndDelete(id);
+
+    if (!listing) {
+        throw new ExpressError(404, "Listing not found!");
+    }
+
+    req.flash("success", "Listing deleted successfully!");
+    res.redirect("/listings");
 };

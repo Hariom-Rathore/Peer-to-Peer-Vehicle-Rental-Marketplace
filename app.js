@@ -1,3 +1,10 @@
+if(process.env.NODE_ENV != "production"){
+require("dotenv").config();
+}
+//this is use if we in the production phase and we deploye our project or abhi jese hum production phase me nahi h to hum env file ko use kar sakte h
+
+
+
 const express=require("express");
 const app=express();
 const mongoose= require("mongoose");
@@ -72,6 +79,7 @@ app.use(express.urlencoded({extended:true}));  //data ko pars karne ke liye
 app.use(methodOverride("_method"));
 
 app.use(express.static(path.join(__dirname,"/public"))); 
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.engine('ejs',ejsMate);  //for ejs mate templeting
 

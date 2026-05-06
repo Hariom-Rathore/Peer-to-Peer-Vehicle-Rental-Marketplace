@@ -8,19 +8,13 @@ const listingSchema = new Schema({
        type:String,
        required:true,
     },
-    description:String,  
-    image:{
+    description: String,
+    image: {
       filename: {
         type: String,
-        default: "listingimage",
       },
       url: {
         type: String,
-        default: "https://images.pexels.com/photos/11129937/pexels-photo-11129937.jpeg",
-        set: (v) =>
-          v === ""
-            ? "https://images.pexels.com/photos/11129937/pexels-photo-11129937.jpeg"
-            : v,
       },
     },
     price:{
@@ -38,7 +32,7 @@ const listingSchema = new Schema({
     ],
     owner:{
       type:Schema.Types.ObjectId,
-      ref:"User",
+      ref:"User", 
       required:true,
     }
 });
