@@ -8,7 +8,10 @@ require("dotenv").config();
 const express=require("express");
 const app=express();
 const mongoose= require("mongoose");
-const MONGO_URL="mongodb://127.0.0.1:27017/wanderlust";  //THIS IS add for mongodb database and databse name is wanderlust
+//const dburl="mongodb://127.0.0.1:27017/wanderlust";  //THIS IS add for mongodb database and databse name is wanderlust
+
+const dbUrl=process.env.ATLASDB_URL;
+
 const path =require("path");
 const Listing=require("./models/listing.js");
 
@@ -17,6 +20,7 @@ const ExpressError=require("./utils/ExpressError.js");                          
 
 const methodOverride=require("method-override");
 const session = require("express-session");
+const MongoStore=require('connect-mongo').default;
 const flash = require("connect-flash");
  
 
@@ -29,11 +33,28 @@ const passport=require("passport");
 const localStrategy=require("passport-local");
 const User= require("./models/user.js");
 
+//session(user ke bare me ki user kitni der baad aaya website pe vesi information) ki inforamtion abb atlas me store hogi jiska dburl le liya h because express sessison me some time data leak ho jata h
+const store=new MongoStore({
+    mongoUrl:dbUrl,
+    crypto:{
+        secret:process.env.SECRET,
+
+    },
+    touchAfter:24*3600,
+});
+
+store.on("error",(err)=>{
+    console.log("error in mongo store",err);
+})
+
 const sessionOptions = {
-    secret: "mysupersecretcode",
+    store,
+    secret: process.env.SECRET,
     resave: false,
     saveUninitialized: false,
 };
+
+
 
 
 const emptyListing = {
@@ -66,12 +87,8 @@ main()
 }); 
 
 async function main(){
-await mongoose.connect(MONGO_URL);
+await mongoose.connect(dbUrl);
 }
-
-app.get("/",(req,res)=>{
-    res.redirect("/listings");
-});
 
 app.set("view engine","ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -97,6 +114,10 @@ app.use((req, res, next) => {
     res.locals.error = req.flash("error");
     res.locals.currUser = req.user;
     next();
+});
+
+app.get("/", (req, res, next) => {
+    next(new ExpressError(404, "Page not found!"));
 });
 
 //make a demo user for checking all things works 

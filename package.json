@@ -1,4 +1,9 @@
 {
+  "engines": {
+    "node": "24.14.0"
+  },
+
+  
   "name": "project_delta",
   "version": "1.0.0",
   "description": "",
@@ -15,8 +20,9 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "cloudinary": "^2.10.0",
+    "cloudinary": "^1.41.3",
     "connect-flash": "^0.1.1",
+    "connect-mongo": "^6.0.0",
     "dotenv": "^17.4.2",
     "ejs": "^5.0.1",
     "ejs-mate": "^4.0.0",
