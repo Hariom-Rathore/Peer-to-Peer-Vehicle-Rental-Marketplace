@@ -18,11 +18,11 @@ router
 	.post(isLoggedIn, upload.single("listing[image]"),validateListing,  listings.createListing);
    
 
-router.get("/new", isLoggedIn, listings.renderNewForm);
+router.get("/new",upload.single("listing[image]"), isLoggedIn, listings.renderNewForm);
 
 router
 .route("/:id")
-.put( isLoggedIn,isOwner, validateListing, listings.updateListing)
+.put(isLoggedIn, isOwner, upload.single("listing[image]"), validateListing, listings.updateListing)
 .delete( isLoggedIn, isOwner, listings.deleteListing)
 .get( listings.showListing); 
 

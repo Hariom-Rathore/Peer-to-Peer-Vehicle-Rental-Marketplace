@@ -1,7 +1,7 @@
 <% layout("/listings/layouts/boilerplate") %>
 <body>
     <h2>Edit Your Listing</h2>
-    <form method="POST" action="/listings/<%= listing._id %>?_method=PUT" novalidate class="needs-validation">
+    <form method="POST" action="/listings/<%= listing._id %>?_method=PUT" novalidate class="needs-validation" enctype="multipart/form-data">
         <div class="row">
             <div class="col-8 offset-2">
                 <div>
@@ -16,11 +16,17 @@
                       <div class="invalid-feedback">Please enter a description.</div>
                 </div>
 
+                <div class="mb-3">
+                    <label class="form-label">Previous Image</label>
+                    <div>
+                        <img src="<%=originalImageUrl%>" alt="Previous listing image" style="height: 150px; object-fit: cover; border-radius: 5px;">
+                    </div>
+                </div>
+
                 <div>
-                    <label for="image" class="form-label">image</label>
-                    <input name="listing[image][url]" value="<%= listing.image?.url %>" type="text" class="form-control">
-                    <input name="listing[image][filename]" value="<%= listing.image?.filename || 'listingimage' %>" type="hidden" required>
-                         <div class="invalid-feedback">Please enter an image URL.</div>
+                    <label for="image" class="form-label">Upload New Image</label>
+                    <input name="listing[image]" type="file" class="form-control"/>
+                       
                 </div>
 
                 <div class="row">

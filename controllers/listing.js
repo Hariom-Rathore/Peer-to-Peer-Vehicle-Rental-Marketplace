@@ -20,7 +20,9 @@ const buildListingData = (incomingListing = {}) => ({
 });
 
 module.exports.index = async (req, res) => {
+    console.log("Fetching all listings...");
     const alllistings = await Listing.find({}).populate("owner");
+    console.log("Found listings:", alllistings.length, alllistings);
     res.render("listings/index.ejs", { alllistings });
 };
 
@@ -32,6 +34,9 @@ module.exports.renderNewForm = (req, res) => {
 };
 
 module.exports.createListing = async (req, res) => {
+    console.log("Creating listing with data:", req.body.listing);
+    console.log("File upload:", req.file);
+
     const listingData = buildListingData(req.body.listing);
 
     if (req.file) {
@@ -39,15 +44,16 @@ module.exports.createListing = async (req, res) => {
             url: req.file.path,
             filename: req.file.filename,
         };
+        console.log("Image set from upload:", listingData.image);
     }
 
     const listing = new Listing(listingData);
     listing.owner = req.user._id;
-    listing.image={url,filename};
-    
+    // if a file was uploaded, `listingData.image` was set above; do not overwrite with undefined vars
 
-
+    console.log("Listing before save:", listing);
     await listing.save();
+    console.log("Listing saved with ID:", listing._id);
     req.flash("success", "New listing created!");
     res.redirect(`/listings/${listing._id}`);
 };
@@ -73,7 +79,9 @@ module.exports.renderEditForm = async (req, res) => {
         throw new ExpressError(404, "Listing not found!");
     }
 
-    res.render("listings/edit.ejs", { listing });
+    let originalImageUrl = listing.image.url;
+    originalImageUrl = originalImageUrl.replace("/upload", "/upload/h_150,w_150");
+    res.render("listings/edit.ejs", { listing, originalImageUrl });
 };
 
 module.exports.updateListing = async (req, res) => {
