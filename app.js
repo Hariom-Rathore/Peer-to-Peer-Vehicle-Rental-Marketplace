@@ -20,7 +20,7 @@ const ExpressError=require("./utils/ExpressError.js");                          
 
 const methodOverride=require("method-override");
 const session = require("express-session");
-const MongoStore=require('connect-mongo').default;
+const MongoStore=require('connect-mongo').default;//as a session
 const flash = require("connect-flash");
  
 
@@ -28,6 +28,7 @@ const flash = require("connect-flash");
 const listings= require("./routes/listing.js"); //this is router
 const reviews=require("./routes/review.js");
 const userRouter=require("./routes/user.js");
+const chatbotRouter=require("./routes/chatbot.js");
 
 const passport=require("passport");
 const localStrategy=require("passport-local");
@@ -92,6 +93,7 @@ await mongoose.connect(dbUrl);
 
 app.set("view engine","ejs");
 app.set("views", path.join(__dirname, "views"));
+app.use(express.json());
 app.use(express.urlencoded({extended:true}));  //data ko pars karne ke liye
 app.use(methodOverride("_method"));
 
@@ -133,6 +135,7 @@ app.get("/", (req, res, next) => {
 
 app.use("/listings",listings);//listings and /listings/:id/reviews this is common part into the all router so this fixed first and after place of this use only /
 app.use("/listings/:id/reviews",reviews);
+app.use("/chatbot",chatbotRouter);
 app.use("/",userRouter);
 
 

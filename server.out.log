@@ -1,0 +1,57 @@
+◇ injected env (7) from .env // tip: ⌘ suppress logs { quiet: true }
+Initializing Gemini AI with API key: Present
+Setting up logging middleware
+server is listening to port 8080
+REQUEST: POST /chatbot/send
+[2026-05-08T10:20:51.039Z] POST /chatbot/send
+Body: { message: 'Hello' }
+[Router] POST /send called
+[Router] req.body: { message: 'Hello' }
+[Router] Extracted message: Hello
+[Router] Calling chatWithGemini with: Hello
+[Chatbot] Using model: models/gemini-2.5-flash
+[Chatbot] User message: Hello
+[Chatbot] Model instance created
+[Chatbot] Chat session started
+[Chatbot] Calling sendMessage...
+[Chatbot] Got result object
+[Chatbot] Response text: Hello! How can I help you today?
+[Router] Got response from chatWithGemini
+[Router] Sending success response
+REQUEST: GET /chatbot
+[2026-05-08T10:21:02.920Z] GET /chatbot
+REQUEST: GET /css/style.css
+REQUEST: GET /css/rating.css
+REQUEST: GET /css/js/script.js
+REQUEST: POST /chatbot/send
+[2026-05-08T10:21:14.576Z] POST /chatbot/send
+Body: { message: 'Hello again' }
+[Router] POST /send called
+[Router] req.body: { message: 'Hello again' }
+[Router] Extracted message: Hello again
+[Router] Calling chatWithGemini with: Hello again
+[Chatbot] Using model: models/gemini-2.5-flash
+[Chatbot] User message: Hello again
+[Chatbot] Model instance created
+[Chatbot] Chat session started
+[Chatbot] Calling sendMessage...
+[Chatbot] Got result object
+[Chatbot] Response text: Hello again! How can I help you today? Or are you just saying hello? Either way, it's good to hear f
+[Router] Got response from chatWithGemini
+[Router] Sending success response
+REQUEST: POST /chatbot/send
+[2026-05-08T10:22:09.709Z] POST /chatbot/send
+Body: { message: 'who are you' }
+[Router] POST /send called
+[Router] req.body: { message: 'who are you' }
+[Router] Extracted message: who are you
+[Router] Calling chatWithGemini with: who are you
+[Chatbot] Using model: models/gemini-2.5-flash
+[Chatbot] User message: who are you
+[Chatbot] Model instance created
+[Chatbot] Chat session started
+[Chatbot] Calling sendMessage...
+[Chatbot] Got result object
+[Chatbot] Response text: I am a large language model, trained by Google.
+[Router] Got response from chatWithGemini
+[Router] Sending success response

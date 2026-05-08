@@ -2,8 +2,6 @@
   "engines": {
     "node": "24.14.0"
   },
-
-  
   "name": "project_delta",
   "version": "1.0.0",
   "description": "",
@@ -20,6 +18,8 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@google/genai": "^2.0.0",
+    "@google/generative-ai": "^0.24.1",
     "cloudinary": "^1.41.3",
     "connect-flash": "^0.1.1",
     "connect-mongo": "^6.0.0",
