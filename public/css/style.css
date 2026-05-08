@@ -178,3 +178,272 @@ width: 100%;
 .review-card {
     width: 100%;
 }
+
+/* ============================================
+   RESPONSIVE MEDIA QUERIES - MOBILE FIRST
+   ============================================ */
+
+/* Extra Small Devices (Phones - less than 576px) */
+@media (max-width: 575.98px) {
+    .navbar {
+        height: auto;
+        padding: 0.5rem 0;
+    }
+
+    .fa-compass {
+        font-size: 1.5rem;
+    }
+
+    .nav-link {
+        font-size: 0.9rem;
+        padding: 0.5rem !important;
+    }
+
+    .search-input {
+        font-size: 0.85rem;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
+    .btn-search {
+        font-size: 0.85rem;
+        padding: 0.35rem 0.5rem !important;
+    }
+
+    .btn-search i {
+        margin: 0.25rem !important;
+    }
+
+    /* Filter section adjustments */
+    #filters {
+        gap: 1rem !important;
+        margin-top: 1rem !important;
+        padding-bottom: 0.5rem;
+    }
+
+    .filter {
+        min-width: 75px;
+    }
+
+    .filter i {
+        font-size: 1rem !important;
+    }
+
+    .filter p {
+        font-size: 0.7rem !important;
+        margin-top: 0.25rem !important;
+    }
+
+    .tax-toggle {
+        min-height: 2.5rem;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+        margin-left: auto;
+    }
+
+    /* Cards adjustments */
+    .listing-card {
+        margin-bottom: 1.5rem;
+    }
+
+    .card-body {
+        padding: 0.75rem !important;
+    }
+
+    .card-text {
+        font-size: 0.9rem;
+    }
+
+    /* Show page adjustments */
+    .show-card {
+        margin-bottom: 0.75rem;
+    }
+
+    .show-img {
+        height: 12rem;
+        border-radius: 0.75rem;
+    }
+
+    .show-actions {
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.75rem;
+    }
+
+    .show-title {
+        font-size: 1.3rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .show-title-top {
+        padding: 0.75rem 0.75rem 0.25rem 0.75rem;
+        font-size: 1.3rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .show-line {
+        font-size: 0.9rem;
+    }
+
+    /* Reviews section adjustments */
+    .reviews-section {
+        margin: 1rem auto 0;
+    }
+
+    .review-card {
+        margin-bottom: 1rem;
+    }
+
+    .review-card .card-text {
+        font-size: 0.85rem;
+    }
+
+    /* Footer adjustments */
+    .f-info {
+        height: auto;
+        padding: 1rem 0.5rem;
+    }
+
+    .f-info-socials i {
+        margin-right: 0.75rem;
+        font-size: 1rem;
+    }
+
+    /* Form elements */
+    .form-control,
+    .btn {
+        font-size: 0.9rem;
+    }
+
+    .btn {
+        padding: 0.4rem 0.8rem;
+    }
+
+    h1 {
+        font-size: 1.5rem !important;
+    }
+
+    h2 {
+        font-size: 1.25rem !important;
+    }
+
+    h3 {
+        font-size: 1.1rem !important;
+    }
+}
+
+/* Small Devices (Landscape phones & small tablets - 576px to 767px) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .navbar {
+        height: 4rem;
+    }
+
+    .fa-compass {
+        font-size: 1.75rem;
+    }
+
+    .search-input {
+        font-size: 0.9rem;
+    }
+
+    .btn-search {
+        font-size: 0.9rem;
+    }
+
+    #filters {
+        gap: 1.25rem !important;
+    }
+
+    .filter {
+        min-width: 80px;
+    }
+
+    .filter i {
+        font-size: 1.1rem !important;
+    }
+
+    .show-img {
+        height: 15rem;
+    }
+
+    .show-title {
+        font-size: 1.5rem;
+    }
+
+    .show-title-top {
+        font-size: 1.5rem;
+    }
+}
+
+/* Medium Devices (Tablets - 768px to 991px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .navbar {
+        height: 4.5rem;
+    }
+
+    .show-img {
+        height: 16rem;
+    }
+
+    .show-title {
+        font-size: 1.6rem;
+    }
+
+    .show-title-top {
+        font-size: 1.6rem;
+    }
+
+    #filters {
+        gap: 1.5rem !important;
+    }
+
+    .filter {
+        min-width: 90px;
+    }
+}
+
+/* Large Devices (Desktop - 992px and above) */
+@media (min-width: 992px) {
+    .navbar {
+        height: 5rem;
+    }
+
+    .search-input {
+        font-size: 1rem;
+    }
+
+    .btn-search {
+        font-size: 1rem;
+    }
+
+    .show-img {
+        height: 19rem;
+    }
+
+    .show-title {
+        font-size: 1.75rem;
+    }
+
+    .show-title-top {
+        font-size: 1.75rem;
+    }
+
+    #filters {
+        gap: 1.5rem !important;
+    }
+}
+
+/* Extra Large Devices (Large screens - 1200px and above) */
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1200px;
+    }
+
+    .fa-compass {
+        font-size: 2rem;
+    }
+
+    #filters {
+        gap: 1.5rem !important;
+    }
+}

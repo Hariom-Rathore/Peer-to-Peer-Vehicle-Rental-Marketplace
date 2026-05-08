@@ -4,7 +4,7 @@
   },
   "name": "project_delta",
   "version": "1.0.0",
-  "description": "",
+  "description": "A full-stack Airbnb clone website where users can:",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -44,5 +44,6 @@
   "bugs": {
     "url": "https://github.com/Hariom-Rathore/PROJECT_DELTA/issues"
   },
-  "homepage": "https://github.com/Hariom-Rathore/PROJECT_DELTA#readme"
+  "homepage": "https://github.com/Hariom-Rathore/PROJECT_DELTA#readme",
+  "devDependencies": {}
 }

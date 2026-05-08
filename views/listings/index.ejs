@@ -69,11 +69,60 @@
   cursor: pointer;
 }
 
-
   .filter p {
     margin-top: 0.35rem;
     margin-bottom: 0;
     font-size: 0.8rem;
+  }
+
+  /* Mobile Responsive */
+  @media (max-width: 575.98px) {
+    #filters {
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .filter {
+      min-width: 70px;
+    }
+
+    .filter i {
+      font-size: 0.9rem;
+    }
+
+    .filter p {
+      font-size: 0.65rem;
+    }
+
+    .tax-toggle {
+      min-height: 2.2rem;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.8rem;
+    }
+  }
+
+  @media (min-width: 576px) and (max-width: 767.98px) {
+    #filters {
+      gap: 1rem;
+    }
+
+    .filter {
+      min-width: 80px;
+    }
+
+    .filter i {
+      font-size: 1rem;
+    }
+
+    .filter p {
+      font-size: 0.75rem;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 991.98px) {
+    #filters {
+      gap: 1.25rem;
+    }
   }
 </style>
 
