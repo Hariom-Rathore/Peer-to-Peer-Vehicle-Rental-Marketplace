@@ -20,10 +20,10 @@ const buildListingData = (incomingListing = {}) => ({
 });
 
 module.exports.index = async (req, res) => {
-    console.log("Fetching all listings...");
-    const alllistings = await Listing.find({}).populate("owner");
-    console.log("Found listings:", alllistings.length, alllistings);
-    res.render("listings/index.ejs", { alllistings });
+    const { category = "all" } = req.query;
+    const filter = category === "all" ? {} : { category };
+    const alllistings = await Listing.find(filter).populate("owner");
+    res.render("listings/index.ejs", { alllistings, currentCategory: category });
 };
 
 module.exports.renderNewForm = (req, res) => {
@@ -38,6 +38,7 @@ module.exports.createListing = async (req, res) => {
     console.log("File upload:", req.file);
 
     const listingData = buildListingData(req.body.listing);
+    listingData.category = listingData.category || "trending";
 
     if (req.file) {
         listingData.image = {

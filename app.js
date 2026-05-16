@@ -11,9 +11,16 @@ const mongoose= require("mongoose");
 //const dburl="mongodb://127.0.0.1:27017/wanderlust";  //THIS IS add for mongodb database and databse name is wanderlust
 
 const dbUrl=process.env.ATLASDB_URL;
+const isProduction = process.env.NODE_ENV === "production";
+
+if (isProduction && (!dbUrl || dbUrl.includes("127.0.0.1") || dbUrl.includes("localhost"))) {
+    throw new Error("ATLASDB_URL must point to MongoDB Atlas in production.");
+}
 
 const path =require("path");
 const Listing=require("./models/listing.js");
+const { data: sampleListings } = require("./init/data.js");
+const DEFAULT_OWNER_ID = "69df2651aaefb65557b7339c";
 
 const ejsMate=require("ejs-mate");  
 const ExpressError=require("./utils/ExpressError.js");                                               //this is usefor when some template are same for all router(pages) like a navbar
@@ -65,6 +72,7 @@ const emptyListing = {
     price: "",
     country: "",
     location: "",
+    category: "trending",
 };
 
 const buildListingData = (incomingListing = {}) => ({
@@ -76,19 +84,94 @@ const buildListingData = (incomingListing = {}) => ({
     },
 });
 
+const resolveSampleCategory = (listing) => {
+    const title = `${listing.title || ""} ${listing.location || ""}`.toLowerCase();
+
+    if (title.includes("beach") || title.includes("pool") || title.includes("villa")) {
+        return "amazing-pools";
+    }
+
+    if (title.includes("room") || title.includes("loft") || title.includes("apartment")) {
+        return "rooms";
+    }
+
+    if (title.includes("city") || title.includes("downtown") || title.includes("new york") || title.includes("miami") || title.includes("tokyo") || title.includes("amsterdam") || title.includes("boston")) {
+        return "iconic-cities";
+    }
+
+    if (title.includes("mountain") || title.includes("aspen") || title.includes("banff") || title.includes("swiss")) {
+        return "mountains";
+    }
+
+    if (title.includes("castle") || title.includes("villa") || title.includes("historic")) {
+        return "castles";
+    }
+
+    if (title.includes("camp") || title.includes("cabin") || title.includes("treehouse")) {
+        return "camping";
+    }
+
+    if (title.includes("farm") || title.includes("cottage") || title.includes("log cabin")) {
+        return "farms";
+    }
+
+    if (title.includes("boat") || title.includes("island") || title.includes("canal")) {
+        return "boats";
+    }
+
+    if (title.includes("snow") || title.includes("arctic") || title.includes("scotland") || title.includes("switzerland")) {
+        return "arctic";
+    }
+
+    return "trending";
+};
+
+async function seedSampleListingsIfNeeded() {
+    const ownerId = process.env.OWNER_ID || DEFAULT_OWNER_ID;
+
+    if (!mongoose.Types.ObjectId.isValid(ownerId)) {
+        throw new Error(`Invalid OWNER_ID: ${ownerId}`);
+    }
+
+    const ownerObjectId = new mongoose.Types.ObjectId(ownerId);
+    let insertedCount = 0;
+
+    for (const listing of sampleListings) {
+        const category = resolveSampleCategory(listing);
+
+        await Listing.findOneAndUpdate(
+            { title: listing.title },
+            {
+                $set: {
+                    ...listing,
+                    category,
+                    owner: ownerObjectId,
+                },
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+        if (category) {
+            insertedCount += 1;
+        }
+    }
+
+    console.log(`Seeded ${insertedCount} sample listings.`);
+}
+
 
 //make according to joi for  server side all things work systematically and i am use on teh router only this function name
 
 
 main()
-.then(()=>{
-})
-.catch((err)=>{
-    console.log(err); 
-}); 
+    .then(async () => {
+        await seedSampleListingsIfNeeded();
+    })
+    .catch((err) => {
+        console.log(err);
+    });
 
-async function main(){
-await mongoose.connect(dbUrl);
+async function main() {
+    await mongoose.connect(dbUrl);
 }
 
 app.set("view engine","ejs");
@@ -118,8 +201,8 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get("/", (req, res, next) => {
-    next(new ExpressError(404, "Page not found!"));
+app.get("/", (req, res) => {
+    res.redirect("/listings");
 });
 
 //make a demo user for checking all things works 

@@ -27,6 +27,15 @@
     cursor: pointer;
   }
 
+  .filter-link {
+    color: inherit;
+  }
+
+  .filter-link.active .filter {
+    opacity: 1;
+    color: #fe424d;
+  }
+
   .tax-info{
     display: none;
   }
@@ -128,55 +137,75 @@
 
   
     <div id="filters">
-      <div class="filter">
-        <div><i class="fa-solid fa-fire"></i></div>
-        <p>Trending</p>
-      </div>
+      <a href="/listings?category=all" class="filter-link <%= currentCategory === 'all' ? 'active' : '' %>">
+        <div class="filter">
+          <div><i class="fa-solid fa-fire"></i></div>
+          <p>Trending</p>
+        </div>
+      </a>
 
-      <div class="filter">
-        <div><i class="fa-solid fa-bed"></i></div>
-        <p>Rooms</p>
-      </div>
+      <a href="/listings?category=rooms" class="filter-link <%= currentCategory === 'rooms' ? 'active' : '' %>">
+        <div class="filter">
+          <div><i class="fa-solid fa-bed"></i></div>
+          <p>Rooms</p>
+        </div>
+      </a>
 
-      <div class="filter">
-        <div><i class="fa-solid fa-mountain-city"></i></div>
-        <p>Iconic Cities</p>
-      </div>
+      <a href="/listings?category=iconic-cities" class="filter-link <%= currentCategory === 'iconic-cities' ? 'active' : '' %>">
+        <div class="filter">
+          <div><i class="fa-solid fa-mountain-city"></i></div>
+          <p>Iconic Cities</p>
+        </div>
+      </a>
 
-      <div class="filter">
-        <div><i class="fa-solid fa-mountain"></i></div>
-        <p>Mountains</p>
-      </div>
+      <a href="/listings?category=mountains" class="filter-link <%= currentCategory === 'mountains' ? 'active' : '' %>">
+        <div class="filter">
+          <div><i class="fa-solid fa-mountain"></i></div>
+          <p>Mountains</p>
+        </div>
+      </a>
 
-      <div class="filter">
-        <div><i class="fa-solid fa-fort-awesome"></i></div>
-        <p>Castels</p>
-      </div>
+      <a href="/listings?category=castles" class="filter-link <%= currentCategory === 'castles' ? 'active' : '' %>">
+        <div class="filter">
+          <div><i class="fa-solid fa-fort-awesome"></i></div>
+          <p>Castels</p>
+        </div>
+      </a>
 
-      <div class="filter">
-        <div><i class="fa-solid fa-person-swimming"></i></div>
-        <p>Amazing Pools</p>
-      </div>
+      <a href="/listings?category=amazing-pools" class="filter-link <%= currentCategory === 'amazing-pools' ? 'active' : '' %>">
+        <div class="filter">
+          <div><i class="fa-solid fa-person-swimming"></i></div>
+          <p>Amazing Pools</p>
+        </div>
+      </a>
 
-      <div class="filter">
-        <div><i class="fa-solid fa-campground"></i></div>
-        <p>Camping</p>
-      </div>
+      <a href="/listings?category=camping" class="filter-link <%= currentCategory === 'camping' ? 'active' : '' %>">
+        <div class="filter">
+          <div><i class="fa-solid fa-campground"></i></div>
+          <p>Camping</p>
+        </div>
+      </a>
 
-      <div class="filter">
-        <div><i class="fa-solid fa-cow"></i></div>
-        <p>Farms</p>
-      </div>
+      <a href="/listings?category=farms" class="filter-link <%= currentCategory === 'farms' ? 'active' : '' %>">
+        <div class="filter">
+          <div><i class="fa-solid fa-cow"></i></div>
+          <p>Farms</p>
+        </div>
+      </a>
 
-      <div class="filter">
-        <div><i class="fa-solid fa-ship"></i></div>
-        <p>Boats</p>
-      </div>
+      <a href="/listings?category=boats" class="filter-link <%= currentCategory === 'boats' ? 'active' : '' %>">
+        <div class="filter">
+          <div><i class="fa-solid fa-ship"></i></div>
+          <p>Boats</p>
+        </div>
+      </a>
 
-      <div class="filter">
-        <div><i class="fa-regular fa-snowflake"></i></div>
-        <p>Arctic</p>
-      </div>
+      <a href="/listings?category=arctic" class="filter-link <%= currentCategory === 'arctic' ? 'active' : '' %>">
+        <div class="filter">
+          <div><i class="fa-regular fa-snowflake"></i></div>
+          <p>Arctic</p>
+        </div>
+      </a>
 
       <div class="tax-toggle form-switch">
         <input 
