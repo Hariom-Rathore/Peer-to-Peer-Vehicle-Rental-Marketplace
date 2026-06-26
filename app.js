@@ -21,6 +21,7 @@ const path =require("path");
 const Listing=require("./models/listing.js");
 const { data: sampleListings } = require("./init/data.js");
 const DEFAULT_OWNER_ID = "69df2651aaefb65557b7339c";
+const DEFAULT_OWNER_WHATSAPP_NUMBER = process.env.OWNER_WHATSAPP_NUMBER || "";
 
 const ejsMate=require("ejs-mate");  
 const ExpressError=require("./utils/ExpressError.js");                                               //this is usefor when some template are same for all router(pages) like a navbar
@@ -73,6 +74,7 @@ const emptyListing = {
     country: "",
     location: "",
     category: "trending",
+    whatsappNumber: "",
 };
 
 const buildListingData = (incomingListing = {}) => ({
@@ -146,6 +148,7 @@ async function seedSampleListingsIfNeeded() {
                     ...listing,
                     category,
                     owner: ownerObjectId,
+                    whatsappNumber: (listing.whatsappNumber || DEFAULT_OWNER_WHATSAPP_NUMBER || "").trim(),
                 },
             },
             { upsert: true, new: true, setDefaultsOnInsert: true }
@@ -158,6 +161,23 @@ async function seedSampleListingsIfNeeded() {
     console.log(`Seeded ${insertedCount} sample listings.`);
 }
 
+async function backfillListingWhatsAppNumbers() {
+    if (!DEFAULT_OWNER_WHATSAPP_NUMBER) {
+        return;
+    }
+
+    await Listing.updateMany(
+        {
+            $or: [
+                { whatsappNumber: { $exists: false } },
+                { whatsappNumber: "" },
+                { whatsappNumber: null },
+            ],
+        },
+        { $set: { whatsappNumber: DEFAULT_OWNER_WHATSAPP_NUMBER.trim() } }
+    );
+}
+
 
 //make according to joi for  server side all things work systematically and i am use on teh router only this function name
 
@@ -165,6 +185,7 @@ async function seedSampleListingsIfNeeded() {
 main()
     .then(async () => {
         await seedSampleListingsIfNeeded();
+        await backfillListingWhatsAppNumbers();
     })
     .catch((err) => {
         console.log(err);

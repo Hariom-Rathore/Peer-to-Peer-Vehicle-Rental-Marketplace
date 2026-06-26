@@ -1,12 +1,13 @@
 <% layout("/listings/layouts/boilerplate") %>
+<% const listingImageUrl = (listing.image && listing.image.url) ? listing.image.url : (typeof listing.image === "string" ? listing.image : "https://images.pexels.com/photos/11129937/pexels-photo-11129937.jpeg"); %>
 
   <div class="card mt-3 show-card listing-card">
     <h3 class="show-title-top">
       <%= listing.title %>
     </h3>
     <img
-      src="<%= listing.image?.url || listing.image || 'https://images.pexels.com/photos/11129937/pexels-photo-11129937.jpeg' %>"
-      class="card-img-top show-img" alt="listing_image">
+      src="<%= listingImageUrl %>"
+      class="card-img-top show-img" alt="car_image" onerror="this.onerror=null;this.src='https://images.pexels.com/photos/11129937/pexels-photo-11129937.jpeg';">
     <div class="card-body show-body">
 
       <p class="show-line">
@@ -17,9 +18,19 @@
         <b>Owner:</b>
         <%= listing.owner?.username || "Unknown Owner" %>
       </p>
-      <p class="show-line">&#8377; <%= listing.price !=null ? listing.price.toLocaleString("en-IN")
-          : "Price not available" %>
+      <% if (listing.whatsappNumber) { %>
+      <p class="show-line">
+        <b>WhatsApp:</b>
+        <%= listing.whatsappNumber %>
       </p>
+      <% } %>
+        <p class="show-line">&#8377; <%= listing.price !=null ? listing.price.toLocaleString("en-IN")
+          : "Price not available" %>
+          /day
+      </p>
+        <% if(listing.ratePerKm != null && listing.ratePerKm !== '') { %>
+          <p class="show-line">Rate: &#8377; <%= listing.ratePerKm %> /km</p>
+        <% } %>
       <p class="show-line">
         <%= listing.location %>
       </p>
@@ -29,7 +40,7 @@
     </div>
   </div>
   </br>
-  <% if(currUser && listing.owner._id.equals(currUser._id)){%>
+  <% if(currUser && listing.owner && listing.owner._id && listing.owner._id.equals(currUser._id)){%>
     <div class="show-actions">
 
       <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark">Edit</a>
@@ -39,6 +50,10 @@
     </div>
 
     <% } %>
+
+    <div class="mt-3">
+       <a href="/listings/book/<%= listing._id %>" class="btn btn-success">Book</a>
+    </div>
 
 
       <div class="reviews-section">

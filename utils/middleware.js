@@ -11,6 +11,8 @@ const emptyListing = {
     price: "",
     country: "",
     location: "",
+    ratePerKm: "",
+    whatsappNumber: "",
 };
 
 const buildListingData = (incomingListing = {}) => ({
@@ -53,7 +55,7 @@ module.exports.isOwner = async (req, res, next) => {
         return res.redirect("/listings");
     }
 
-    if (!req.user || !listing.owner.equals(req.user._id)) {
+    if (!req.user || !listing.owner || !listing.owner.equals(req.user._id)) {
         req.flash("error", "you are not owner of this listing");
         return res.redirect(`/listings/${id}`);
     }
@@ -61,7 +63,10 @@ module.exports.isOwner = async (req, res, next) => {
 };
 
 module.exports.validateListing = (req, res, next) => {
-    const { error } = listingSchema.validate(req.body);
+    const { error } = listingSchema.validate(req.body, {
+        allowUnknown: true,
+        abortEarly: false,
+    });
     if (error) {
         const errMsg = error.details.map((el) => el.message).join(",");
         const err = new ExpressError(400, errMsg);

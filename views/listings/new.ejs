@@ -1,6 +1,6 @@
 <% layout("/listings/layouts/boilerplate") %>
 
-<h2>Create a New Listing</h2>
+<h2>Add a New Car</h2>
 
 <% if (errorMsg) { %>
     <div class="alert alert-danger" role="alert"><%= errorMsg %></div>
@@ -10,21 +10,21 @@
     <div class="row">
         <div class="col-8 offset-2">
             <div class="mb-3">
-                <label for="title" class="form-label">Title</label>
-                <input id="title" name="listing[title]" placeholder="Add a catchy title" type="text" class="form-control" required value="<%= listing && listing.title ? listing.title : "" %>">
+                <label for="title" class="form-label">Car Title</label>
+                <input id="title" name="listing[title]" placeholder="Add car name (e.g. Turbo Red Sports Car)" type="text" class="form-control" required value="<%= listing && listing.title ? listing.title : "" %>">
                 <div class="invalid-feedback">Please enter a title.</div>
             </div>
 
             <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
-                <input id="description" name="listing[description]" placeholder="Enter description" type="text" class="form-control" required value="<%= listing && listing.description ? listing.description : "" %>">
+                <label for="description" class="form-label">Car Description</label>
+                <input id="description" name="listing[description]" placeholder="Enter car details" type="text" class="form-control" required value="<%= listing && listing.description ? listing.description : "" %>">
                 <div class="invalid-feedback">Please enter a description.</div>
             </div>
 
 
 
              <div class="mb-3">
-                <label for="image" class="form-label">Upload listing Image</label>
+                <label for="image" class="form-label">Upload Car Image</label>
                 <input id="image" name="listing[image]" placeholder="Image url" type="file" class="form-control">
                 required
                 
@@ -32,9 +32,14 @@
 
             <div class="row">
                 <div class="mb-3 col-md-4">
-                    <label for="price" class="form-label">Price</label>
-                    <input id="price" name="listing[price]" placeholder="Enter integer price (e.g. 1200)" type="text" class="form-control" required value="<%= listing && listing.price !== undefined && listing.price !== null ? listing.price : "" %>">
+                    <label for="price" class="form-label">Price Per Day</label>
+                    <input id="price" name="listing[price]" placeholder="Enter integer price (e.g. 5000)" type="text" class="form-control" required value="<%= listing && listing.price !== undefined && listing.price !== null ? listing.price : "" %>">
                     <div class="invalid-feedback">Please enter a valid price.</div>
+                </div>
+
+                <div class="mb-3 col-md-4">
+                    <label for="ratePerKm" class="form-label">Rate Per Km</label>
+                    <input id="ratePerKm" name="listing[ratePerKm]" placeholder="Enter rate per km (e.g. 20)" type="number" class="form-control" value="<%= listing && listing.ratePerKm !== undefined && listing.ratePerKm !== null ? listing.ratePerKm : "" %>">
                 </div>
 
                 <div class="mb-3 col-md-8">
@@ -45,12 +50,38 @@
             </div>
 
             <div class="mb-3">
+                <label for="carType" class="form-label">Car Type</label>
+                <select id="carType" name="listing[carType]" class="form-select">
+                    <option value="other" <%= listing && listing.carType === 'other' ? 'selected' : '' %>>Other</option>
+                    <option value="electric" <%= listing && listing.carType === 'electric' ? 'selected' : '' %>>Electric</option>
+                    <option value="petrol" <%= listing && listing.carType === 'petrol' ? 'selected' : '' %>>Petrol</option>
+                    <option value="diesel" <%= listing && listing.carType === 'diesel' ? 'selected' : '' %>>Diesel</option>
+                    <option value="hybrid" <%= listing && listing.carType === 'hybrid' ? 'selected' : '' %>>Hybrid</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="seats" class="form-label">Seating Capacity</label>
+                <select id="seats" name="listing[seats]" class="form-select">
+                    <option value="4" <%= listing && Number(listing.seats) === 4 ? 'selected' : '' %>>4 Seater</option>
+                    <option value="6" <%= listing && Number(listing.seats) === 6 ? 'selected' : '' %>>6 Seater</option>
+                    <option value="10" <%= listing && Number(listing.seats) === 10 ? 'selected' : '' %>>10 Seater</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
                 <label for="location" class="form-label">Location</label>
                 <input id="location" name="listing[location]" placeholder="Enter location" type="text" class="form-control" required value="<%= listing && listing.location ? listing.location : "" %>">
                 <div class="invalid-feedback">Please enter a location.</div>
             </div>
 
-            <button class="btn btn-dark">Add</button>
+            <div class="mb-3">
+                <label for="whatsappNumber" class="form-label">Owner WhatsApp Number</label>
+                <input id="whatsappNumber" name="listing[whatsappNumber]" placeholder="Enter WhatsApp number with country code, e.g. 919876543210" type="text" class="form-control" required value="<%= listing && listing.whatsappNumber ? listing.whatsappNumber : "" %>">
+                <div class="invalid-feedback">Please enter a WhatsApp number.</div>
+            </div>
+
+            <button class="btn btn-dark">Add Car</button>
         </div>
     </div>
 </form>

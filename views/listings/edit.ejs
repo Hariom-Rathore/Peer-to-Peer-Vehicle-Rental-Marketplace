@@ -1,39 +1,44 @@
 <% layout("/listings/layouts/boilerplate") %>
 <body>
-    <h2>Edit Your Listing</h2>
+    <h2>Edit Your Car</h2>
     <form method="POST" action="/listings/<%= listing._id %>?_method=PUT" novalidate class="needs-validation" enctype="multipart/form-data">
         <div class="row">
             <div class="col-8 offset-2">
                 <div>
-                    <label for="title" class="form-label">Title</label>
+                    <label for="title" class="form-label">Car Title</label>
                     <input name="listing[title]" value="<%= listing.title %>" type="text" class="form-control" required>
                     <div class="invalid-feedback">Please enter a title.</div>
                 </div>
 
                 <div>
-                    <label for="description" class="form-label">description</label>
+                    <label for="description" class="form-label">Car Description</label>
                     <input name="listing[description]" value="<%= listing.description %>" type="text" class="form-control" required>
                       <div class="invalid-feedback">Please enter a description.</div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Previous Image</label>
+                    <label class="form-label">Previous Car Image</label>
                     <div>
-                        <img src="<%=originalImageUrl%>" alt="Previous listing image" style="height: 150px; object-fit: cover; border-radius: 5px;">
+                        <img src="<%=originalImageUrl%>" alt="Previous car image" style="height: 150px; object-fit: cover; border-radius: 5px;" onerror="this.onerror=null;this.src='https://images.pexels.com/photos/11129937/pexels-photo-11129937.jpeg';">
                     </div>
                 </div>
 
                 <div>
-                    <label for="image" class="form-label">Upload New Image</label>
+                    <label for="image" class="form-label">Upload New Car Image</label>
                     <input name="listing[image]" type="file" class="form-control"/>
                        
                 </div>
 
                 <div class="row">
                     <div class="mb-3 col-md-4">
-                        <label for="price" class="form-label">price</label>
+                        <label for="price" class="form-label">Price Per Day</label>
                         <input name="listing[price]" value="<%= listing.price %>" type="number" class="form-control" required>
                          <div class="invalid-feedback">Please enter a valid price.</div>
+                    </div>
+
+                    <div class="mb-3 col-md-4">
+                        <label for="ratePerKm" class="form-label">Rate Per Km</label>
+                        <input name="listing[ratePerKm]" value="<%= listing.ratePerKm %>" type="number" class="form-control">
                     </div>
 
                     <div class="mb-3 col-md-8">
@@ -48,8 +53,33 @@
                     <input name="listing[location]" value="<%= listing.location %>" type="text" class="form-control" required>
                       <div class="invalid-feedback">Please enter a location.</div>
                 </div>
+
+                <div class="mb-3">
+                    <label for="whatsappNumber" class="form-label">Owner WhatsApp Number</label>
+                    <input name="listing[whatsappNumber]" value="<%= listing.whatsappNumber || '' %>" type="text" class="form-control" required>
+                    <div class="invalid-feedback">Please enter a WhatsApp number.</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="carType" class="form-label">Car Type</label>
+                    <select id="carType" name="listing[carType]" class="form-select">
+                        <option value="other" <%= listing.carType === 'other' ? 'selected' : '' %>>Other</option>
+                        <option value="electric" <%= listing.carType === 'electric' ? 'selected' : '' %>>Electric</option>
+                        <option value="petrol" <%= listing.carType === 'petrol' ? 'selected' : '' %>>Petrol</option>
+                        <option value="diesel" <%= listing.carType === 'diesel' ? 'selected' : '' %>>Diesel</option>
+                        <option value="hybrid" <%= listing.carType === 'hybrid' ? 'selected' : '' %>>Hybrid</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="seats" class="form-label">Seating Capacity</label>
+                    <select id="seats" name="listing[seats]" class="form-select">
+                        <option value="4" <%= Number(listing.seats) === 4 ? 'selected' : '' %>>4 Seater</option>
+                        <option value="6" <%= Number(listing.seats) === 6 ? 'selected' : '' %>>6 Seater</option>
+                        <option value="10" <%= Number(listing.seats) === 10 ? 'selected' : '' %>>10 Seater</option>
+                    </select>
+                </div>
                 <br>
-                <button class="btn btn-dark edit-btn">Edit</button>
+                <button class="btn btn-dark edit-btn">Update Car</button>
             </div>
         </div>
     </form>

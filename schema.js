@@ -9,6 +9,11 @@ module.exports.listingSchema = Joi.object({              //syntex
         location: Joi.string().trim().required(),
         country: Joi.string().trim().required(),
         price: Joi.number().integer().min(0).required(),
+        ratePerKm: Joi.number().min(0).optional(),
+        whatsappNumber: Joi.string().trim().min(8).max(20).required(),
+        carType: Joi.string().trim().valid("electric", "petrol", "diesel", "hybrid", "other").optional(),
+        seats: Joi.number().valid(4, 6, 10).optional(),
+        category: Joi.string().trim().optional(),
         image: Joi.object({
             url: Joi.string().trim().allow("", null),
             filename: Joi.string().trim().allow("", null),

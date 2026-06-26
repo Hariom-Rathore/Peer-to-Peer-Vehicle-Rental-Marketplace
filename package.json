@@ -35,7 +35,8 @@
     "multer-storage-cloudinary": "^4.0.0",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
-    "passport-local-mongoose": "^9.0.1"
+    "passport-local-mongoose": "^9.0.1",
+    "razorpay": "^2.9.6"
   },
   "repository": {
     "type": "git",
@@ -44,6 +45,5 @@
   "bugs": {
     "url": "https://github.com/Hariom-Rathore/PROJECT_DELTA/issues"
   },
-  "homepage": "https://github.com/Hariom-Rathore/PROJECT_DELTA#readme",
-  "devDependencies": {}
+  "homepage": "https://github.com/Hariom-Rathore/PROJECT_DELTA#readme"
 }

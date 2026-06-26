@@ -144,66 +144,80 @@
         </div>
       </a>
 
-      <a href="/listings?category=rooms" class="filter-link <%= currentCategory === 'rooms' ? 'active' : '' %>">
+      <a href="/listings?category=sedans" class="filter-link <%= currentCategory === 'sedans' ? 'active' : '' %>">
         <div class="filter">
-          <div><i class="fa-solid fa-bed"></i></div>
-          <p>Rooms</p>
+          <div><i class="fa-solid fa-car-side"></i></div>
+          <p>Sedans</p>
         </div>
       </a>
 
-      <a href="/listings?category=iconic-cities" class="filter-link <%= currentCategory === 'iconic-cities' ? 'active' : '' %>">
+      <a href="/listings?category=suvs" class="filter-link <%= currentCategory === 'suvs' ? 'active' : '' %>">
         <div class="filter">
-          <div><i class="fa-solid fa-mountain-city"></i></div>
-          <p>Iconic Cities</p>
+          <div><i class="fa-solid fa-truck-monster"></i></div>
+          <p>SUVs</p>
         </div>
       </a>
 
-      <a href="/listings?category=mountains" class="filter-link <%= currentCategory === 'mountains' ? 'active' : '' %>">
+      <a href="/listings?seats=4" class="filter-link <%= Number(currentSeats) === 4 ? 'active' : '' %>">
         <div class="filter">
-          <div><i class="fa-solid fa-mountain"></i></div>
-          <p>Mountains</p>
+          <div><i class="fa-solid fa-user-friends"></i></div>
+          <p>4 Seater</p>
         </div>
       </a>
 
-      <a href="/listings?category=castles" class="filter-link <%= currentCategory === 'castles' ? 'active' : '' %>">
+      <a href="/listings?seats=6" class="filter-link <%= Number(currentSeats) === 6 ? 'active' : '' %>">
         <div class="filter">
-          <div><i class="fa-solid fa-fort-awesome"></i></div>
-          <p>Castels</p>
+          <div><i class="fa-solid fa-users"></i></div>
+          <p>6 Seater</p>
         </div>
       </a>
 
-      <a href="/listings?category=amazing-pools" class="filter-link <%= currentCategory === 'amazing-pools' ? 'active' : '' %>">
+      <a href="/listings?seats=10" class="filter-link <%= Number(currentSeats) === 10 ? 'active' : '' %>">
         <div class="filter">
-          <div><i class="fa-solid fa-person-swimming"></i></div>
-          <p>Amazing Pools</p>
+          <div><i class="fa-solid fa-people-roof"></i></div>
+          <p>10 Seater</p>
         </div>
       </a>
 
-      <a href="/listings?category=camping" class="filter-link <%= currentCategory === 'camping' ? 'active' : '' %>">
+      <a href="/listings?category=luxury" class="filter-link <%= currentCategory === 'luxury' ? 'active' : '' %>">
         <div class="filter">
-          <div><i class="fa-solid fa-campground"></i></div>
-          <p>Camping</p>
+          <div><i class="fa-solid fa-crown"></i></div>
+          <p>Luxury</p>
         </div>
       </a>
 
-      <a href="/listings?category=farms" class="filter-link <%= currentCategory === 'farms' ? 'active' : '' %>">
+      <a href="/listings?category=sports" class="filter-link <%= currentCategory === 'sports' ? 'active' : '' %>">
         <div class="filter">
-          <div><i class="fa-solid fa-cow"></i></div>
-          <p>Farms</p>
+          <div><i class="fa-solid fa-flag-checkered"></i></div>
+          <p>Sports</p>
         </div>
       </a>
 
-      <a href="/listings?category=boats" class="filter-link <%= currentCategory === 'boats' ? 'active' : '' %>">
+      <a href="/listings?category=offroad" class="filter-link <%= currentCategory === 'offroad' ? 'active' : '' %>">
         <div class="filter">
-          <div><i class="fa-solid fa-ship"></i></div>
-          <p>Boats</p>
+          <div><i class="fa-solid fa-hill-rockslide"></i></div>
+          <p>Offroad</p>
         </div>
       </a>
 
-      <a href="/listings?category=arctic" class="filter-link <%= currentCategory === 'arctic' ? 'active' : '' %>">
+      <a href="/listings?category=family" class="filter-link <%= currentCategory === 'family' ? 'active' : '' %>">
+        <div class="filter">
+          <div><i class="fa-solid fa-people-group"></i></div>
+          <p>Family</p>
+        </div>
+      </a>
+
+      <a href="/listings?category=vintage" class="filter-link <%= currentCategory === 'vintage' ? 'active' : '' %>">
+        <div class="filter">
+          <div><i class="fa-solid fa-clock-rotate-left"></i></div>
+          <p>Vintage</p>
+        </div>
+      </a>
+
+      <a href="/listings?category=winter" class="filter-link <%= currentCategory === 'winter' ? 'active' : '' %>">
         <div class="filter">
           <div><i class="fa-regular fa-snowflake"></i></div>
-          <p>Arctic</p>
+          <p>Winter</p>
         </div>
       </a>
 
@@ -221,15 +235,24 @@
     </div>
 
     <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+      <% if (!alllistings || alllistings.length === 0) { %>
+        <div class="col-12 my-3">
+          <div class="alert alert-warning">No cars found<% if (currentSearch && currentSearch.trim()) { %> for "<%= currentSearch %>"<% } %></div>
+        </div>
+      <% } %>
          <% for(let listing of alllistings){%>
+            <% const listingImageUrl = (listing.image && listing.image.url) ? listing.image.url : (typeof listing.image === "string" ? listing.image : "https://images.pexels.com/photos/11129937/pexels-photo-11129937.jpeg"); %>
             <a href="/listings/<%=listing._id%>" class="listing-link">
     <div class="card col listing-card">
-  <img src="<%= listing.image?.url || listing.image || "https://images.pexels.com/photos/11129937/pexels-photo-11129937.jpeg" %>" class="card-img-top" alt="listing_image" style="height: 20rem"/>
+  <img src="<%= listingImageUrl %>" class="card-img-top" alt="car_image" style="height: 20rem" onerror="this.onerror=null;this.src='https://images.pexels.com/photos/11129937/pexels-photo-11129937.jpeg';"/>
   <div class="card-img-overlay"></div>
   <div class="card-body">
     <p class="card-text">
         <%=listing.title%> <br/>
-       <%= listing.price != null ? listing.price.toLocaleString("en-IN") : "Price not available" %> /night
+      <%= listing.price != null ? listing.price.toLocaleString("en-IN") : "Price not available" %> /day
+      <% if(listing.ratePerKm != null && listing.ratePerKm !== '') { %>
+        <br/><small class="text-muted">&#8377; <%= listing.ratePerKm %> /km</small>
+      <% } %>
        <i class="tax-info"> &nbsp:&nbsp;+18%GST</i>
     </p>
   </div>

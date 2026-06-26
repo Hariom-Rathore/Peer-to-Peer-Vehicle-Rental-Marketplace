@@ -1,0 +1,687 @@
+<% layout('/listings/layouts/boilerplate') %>
+
+<h2>Book: <%= listing.title %></h2>
+
+<div class="row">
+  <div class="col-md-6">
+    <div id="map" style="height:400px;width:100%"></div>
+  </div>
+  <div class="col-md-6">
+    <form id="bookingForm">
+      <div id="geoMsg" class="mb-2 text-muted" style="font-size:0.9rem"></div>
+      <div class="mb-3">
+        <label class="form-label">From (Pickup)</label>
+        <div class="input-group">
+          <input id="pickup" class="form-control" autocomplete="off" placeholder="From: address or lat,lng (e.g., Andheri, Mumbai or 19.1190,72.8466)" />
+          <button id="detectBtn" type="button" class="btn btn-outline-secondary">Detect</button>
+        </div>
+        <div id="pickupSuggestions" class="autocomplete-suggestions"></div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">To (Destination)</label>
+        <div class="input-group">
+          <input id="destination" class="form-control" autocomplete="off" placeholder="To: address (e.g., Gateway of India)" />
+        </div>
+        <div id="destSuggestions" class="autocomplete-suggestions"></div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Purpose / Event</label>
+        <input id="purpose" class="form-control" placeholder="Kis event ke liye? (e.g., shaadi, picnic, airport pickup)" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Distance</label>
+        <input id="distance" class="form-control" readonly />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Estimated Travel Time</label>
+        <input id="duration" class="form-control" readonly />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Toll Taxes</label>
+        <input id="tollTaxes" type="number" min="0" step="1" class="form-control" placeholder="Enter total toll tax amount" value="0" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Total Charges</label>
+        <input id="totalCost" class="form-control" readonly />
+      </div>
+      <button id="payBtn" class="btn btn-primary" type="button">Pay & Book</button>
+    </form>
+  </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script type="application/json" id="listing-data"><%- JSON.stringify(listing) %></script>
+<script type="application/json" id="current-user-data"><%- JSON.stringify(currUser ? { id: currUser._id, username: currUser.username, email: currUser.email } : null) %></script>
+<script type="application/json" id="booking-config"><%- JSON.stringify({ razorpayKey, orsKey: typeof orsKey !== 'undefined' ? orsKey : '', ownerWhatsappNumber: typeof ownerWhatsappNumber !== 'undefined' ? ownerWhatsappNumber : '' }) %></script>
+
+<script>
+const listing = JSON.parse(document.getElementById('listing-data').textContent);
+const currentUser = JSON.parse(document.getElementById('current-user-data').textContent);
+const bookingConfig = JSON.parse(document.getElementById('booking-config').textContent);
+const razorpayKey = bookingConfig.razorpayKey || '';
+const orsKey = bookingConfig.orsKey || '';
+const ownerWhatsappNumber = bookingConfig.ownerWhatsappNumber || '';
+const maxBookingAmountInr = 500000;
+
+let map;
+let pickupMarker;
+let destMarker;
+let routeLine;
+let pickupCoords = null;
+let destCoords = null;
+let pickupDebounceTimer = null;
+let destDebounceTimer = null;
+let lastRouteDistanceKm = 0;
+let lastRouteDurationSeconds = 0;
+const geocodeCache = new Map();
+
+function initMap() {
+  map = L.map('map').setView([20.5937, 78.9629], 5);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  map.on('click', async (event) => {
+    pickupCoords = [event.latlng.lat, event.latlng.lng];
+    const pickupInput = document.getElementById('pickup');
+    setPickupMarker(pickupCoords);
+
+    setStatus('Pickup selected on the map. Resolving address...');
+
+    const address = await reverseGeocode(pickupCoords);
+    if (pickupInput) {
+      pickupInput.value = address || `${pickupCoords[0].toFixed(6)}, ${pickupCoords[1].toFixed(6)}`;
+    }
+
+    setStatus(address ? 'Pickup address selected from the map.' : 'Pickup selected on the map. Enter destination to calculate the route.');
+    maybeCalculateRoute();
+  });
+
+  tryAutoPickup();
+}
+
+async function tryAutoPickup() {
+  if (!navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      pickupCoords = [pos.coords.latitude, pos.coords.longitude];
+      const pickupInput = document.getElementById('pickup');
+      if (pickupInput && !pickupInput.value.trim()) {
+        pickupInput.value = `${pickupCoords[0].toFixed(6)}, ${pickupCoords[1].toFixed(6)}`;
+      }
+
+      map.setView(pickupCoords, 12);
+      setPickupMarker(pickupCoords);
+
+      setStatus('Current location detected. Enter destination to calculate route.');
+      maybeCalculateRoute();
+    },
+    () => setStatus('Location permission was not granted. You can still type pickup and destination manually.')
+  );
+}
+
+function setStatus(message) {
+  const geoMsgEl = document.getElementById('geoMsg');
+  if (geoMsgEl) geoMsgEl.textContent = message;
+}
+
+function setPickupMarker(latlng) {
+  if (pickupMarker) pickupMarker.remove();
+  pickupMarker = L.marker(latlng).addTo(map).bindPopup('Pickup').openPopup();
+}
+
+function setDestMarker(latlng) {
+  if (destMarker) destMarker.remove();
+  destMarker = L.marker(latlng).addTo(map).bindPopup('Destination').openPopup();
+}
+
+async function reverseGeocode(latlng) {
+  try {
+    const response = await fetch(`/listings/reverse-geocode?lat=${encodeURIComponent(latlng[0])}&lon=${encodeURIComponent(latlng[1])}`, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) return '';
+
+    const data = await response.json();
+    return data.display_name || '';
+  } catch (error) {
+    console.error(error);
+    return '';
+  }
+}
+
+function drawRoutePolyline(coords) {
+  if (routeLine) routeLine.remove();
+  routeLine = L.polyline(coords, {
+    color: '#0d6efd',
+    weight: 5,
+    opacity: 0.85
+  }).addTo(map);
+
+  map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
+}
+
+function isCoords(str) {
+  return /^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*$/.test(str);
+}
+
+function toLatLngPairFromText(str) {
+  return str.split(',').map((part) => Number(part.trim()));
+}
+
+function haversineDistance([lat1, lon1], [lat2, lon2]) {
+  function toRad(value) {
+    return (value * Math.PI) / 180;
+  }
+
+  const earthRadiusKm = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  return earthRadiusKm * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+function formatDuration(seconds) {
+  if (!seconds || seconds <= 0) return 'N/A';
+
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.round((seconds % 3600) / 60);
+
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
+async function nominatimSearch(query) {
+  const cacheKey = query.trim().toLowerCase();
+  if (geocodeCache.has(cacheKey)) {
+    return geocodeCache.get(cacheKey);
+  }
+
+  const url = `/listings/geocode?q=${encodeURIComponent(query)}`;
+  const request = fetch(url, {
+    headers: {
+      'Accept': 'application/json'
+    }
+  })
+    .then((res) => {
+      if (!res.ok) return [];
+      return res.json();
+    })
+    .catch((error) => {
+      geocodeCache.delete(cacheKey);
+      throw error;
+    });
+
+  geocodeCache.set(cacheKey, request);
+  return request;
+}
+
+function clearSuggestions(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = '';
+  container.style.display = 'none';
+}
+
+function renderSuggestions(containerId, items, onSelect) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  if (!items.length) {
+    container.style.display = 'none';
+    return;
+  }
+
+  items.forEach((item) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'autocomplete-item';
+    button.textContent = item.display_name;
+    button.addEventListener('click', () => onSelect(item));
+    container.appendChild(button);
+  });
+
+  container.style.display = 'block';
+}
+
+async function searchLocation(inputValue, type) {
+  const containerId = type === 'pickup' ? 'pickupSuggestions' : 'destSuggestions';
+  const query = inputValue.trim();
+
+  if (!query) {
+    clearSuggestions(containerId);
+    return;
+  }
+
+  if (isCoords(query)) {
+    clearSuggestions(containerId);
+    return;
+  }
+
+  let results = [];
+
+  try {
+    results = await nominatimSearch(query);
+  } catch (error) {
+    console.error(error);
+    setStatus('Location search is temporarily unavailable. Please type a full address or lat,lng.');
+    clearSuggestions(containerId);
+    return;
+  }
+
+  renderSuggestions(containerId, results, (item) => {
+    const coords = [Number(item.lat), Number(item.lon)];
+
+    if (type === 'pickup') {
+      pickupCoords = coords;
+      document.getElementById('pickup').value = item.display_name;
+      setPickupMarker(coords);
+      map.setView(coords, 12);
+      clearSuggestions(containerId);
+    } else {
+      destCoords = coords;
+      document.getElementById('destination').value = item.display_name;
+      setDestMarker(coords);
+      clearSuggestions(containerId);
+    }
+
+    maybeCalculateRoute();
+  });
+}
+
+async function geocodeSingleLocation(text) {
+  if (isCoords(text)) {
+    return toLatLngPairFromText(text);
+  }
+
+  let results = [];
+
+  try {
+    results = await nominatimSearch(text);
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+
+  if (!results.length) return null;
+
+  return [Number(results[0].lat), Number(results[0].lon)];
+}
+
+async function maybeCalculateRoute() {
+  const pickupText = document.getElementById('pickup').value.trim();
+  const destinationText = document.getElementById('destination').value.trim();
+
+  if (!pickupText || !destinationText) return;
+
+  const pickup = pickupCoords || await geocodeSingleLocation(pickupText);
+  const destination = destCoords || await geocodeSingleLocation(destinationText);
+
+  if (!pickup || !destination) {
+    setStatus('Could not find one of the locations. Please choose from the suggestions or enter lat,lng.');
+    return;
+  }
+
+  pickupCoords = pickup;
+  destCoords = destination;
+
+  setPickupMarker(pickupCoords);
+  setDestMarker(destCoords);
+
+  try {
+    await drawRouteAndUpdateFare(pickupCoords, destCoords);
+    setStatus('Route calculated successfully.');
+  } catch (error) {
+    console.error(error);
+    setStatus('Route service failed. Showing straight-line estimate instead.');
+    fallbackDistanceAndCost(pickupCoords, destCoords);
+  }
+}
+
+async function drawRouteAndUpdateFare(pickup, destination) {
+  const distanceBox = document.getElementById('distance');
+  const durationBox = document.getElementById('duration');
+  const totalCostBox = document.getElementById('totalCost');
+  const tollTaxesBox = document.getElementById('tollTaxes');
+
+  let routeDistanceKm = 0;
+  let routeDurationSeconds = 0;
+  let routeCoordinates = null;
+
+  if (orsKey) {
+    const orsResponse = await fetch('https://api.openrouteservice.org/v2/directions/driving-car/geojson', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': orsKey
+      },
+      body: JSON.stringify({
+        coordinates: [
+          [pickup[1], pickup[0]],
+          [destination[1], destination[0]]
+        ]
+      })
+    });
+
+    if (orsResponse.ok) {
+      const orsData = await orsResponse.json();
+      const feature = orsData.features && orsData.features[0];
+
+      if (feature) {
+        routeCoordinates = feature.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+        routeDistanceKm = (feature.properties.summary.distance / 1000);
+        routeDurationSeconds = feature.properties.summary.duration;
+      }
+    }
+  }
+
+  if (!routeCoordinates) {
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${pickup[1]},${pickup[0]};${destination[1]},${destination[0]}?overview=full&geometries=geojson`;
+    const osrmResponse = await fetch(osrmUrl);
+    if (!osrmResponse.ok) throw new Error('OSRM route request failed');
+
+    const osrmData = await osrmResponse.json();
+    const firstRoute = osrmData.routes && osrmData.routes[0];
+    if (!firstRoute) throw new Error('No route found');
+
+    routeCoordinates = firstRoute.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+    routeDistanceKm = firstRoute.distance / 1000;
+    routeDurationSeconds = firstRoute.duration;
+  }
+
+  drawRoutePolyline(routeCoordinates);
+
+  lastRouteDistanceKm = routeDistanceKm;
+  lastRouteDurationSeconds = routeDurationSeconds;
+  updateFareFields();
+}
+
+function fallbackDistanceAndCost(pickup, destination) {
+  const distanceKm = haversineDistance(pickup, destination);
+  const estimatedTravelTime = 'N/A';
+
+  document.getElementById('distance').value = `${distanceKm.toFixed(2)} km`;
+  document.getElementById('duration').value = estimatedTravelTime;
+
+  lastRouteDistanceKm = distanceKm;
+  lastRouteDurationSeconds = 0;
+  updateFareFields();
+
+  drawRoutePolyline([pickup, destination]);
+}
+
+function updateFareFields() {
+  const totalCostBox = document.getElementById('totalCost');
+  const tollTaxesBox = document.getElementById('tollTaxes');
+  const distanceBox = document.getElementById('distance');
+  const durationBox = document.getElementById('duration');
+
+  const ratePerKm = Number(listing.ratePerKm || 0);
+  const basePrice = Number(listing.price || 0);
+  const tollTaxes = Number(tollTaxesBox?.value || 0);
+  const distanceCharge = Math.ceil(lastRouteDistanceKm * ratePerKm);
+  const total = Math.max(0, Math.ceil(basePrice + distanceCharge + tollTaxes));
+
+  if (distanceBox && lastRouteDistanceKm > 0) {
+    distanceBox.value = `${lastRouteDistanceKm.toFixed(2)} km`;
+  }
+
+  if (durationBox && lastRouteDurationSeconds >= 0) {
+    durationBox.value = lastRouteDurationSeconds > 0 ? formatDuration(lastRouteDurationSeconds) : durationBox.value;
+  }
+
+  if (totalCostBox) totalCostBox.value = `₹${total}`;
+  const payBtn = document.getElementById('payBtn');
+  if (payBtn) payBtn.dataset.amount = total;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+
+  const pickupInput = document.getElementById('pickup');
+  const destinationInput = document.getElementById('destination');
+  const detectBtn = document.getElementById('detectBtn');
+  const payBtn = document.getElementById('payBtn');
+  const tollTaxesInput = document.getElementById('tollTaxes');
+
+  const pickupSuggestions = document.getElementById('pickupSuggestions');
+  const destSuggestions = document.getElementById('destSuggestions');
+
+  if (pickupInput) {
+    pickupInput.addEventListener('input', () => {
+      clearTimeout(pickupDebounceTimer);
+      pickupDebounceTimer = setTimeout(() => searchLocation(pickupInput.value, 'pickup'), 300);
+      pickupCoords = null;
+    });
+  }
+
+  if (destinationInput) {
+    destinationInput.addEventListener('input', () => {
+      clearTimeout(destDebounceTimer);
+      destDebounceTimer = setTimeout(() => searchLocation(destinationInput.value, 'destination'), 300);
+      destCoords = null;
+    });
+  }
+
+  document.addEventListener('click', (event) => {
+    if (pickupSuggestions && !pickupSuggestions.contains(event.target) && event.target !== pickupInput) {
+      pickupSuggestions.style.display = 'none';
+    }
+    if (destSuggestions && !destSuggestions.contains(event.target) && event.target !== destinationInput) {
+      destSuggestions.style.display = 'none';
+    }
+  });
+
+  if (detectBtn) {
+    detectBtn.addEventListener('click', tryAutoPickup);
+  }
+
+  if (tollTaxesInput) {
+    tollTaxesInput.addEventListener('input', updateFareFields);
+  }
+
+  // removed preview button; route now auto-calculates when inputs change or selection is made
+
+  if (payBtn) {
+    payBtn.addEventListener('click', async () => {
+      try {
+        if (!currentUser) {
+          window.location.href = '/login';
+          return;
+        }
+
+        if (typeof Razorpay === 'undefined') {
+          alert('Payment library is still loading. Please try again in a moment.');
+          return;
+        }
+
+        const amount = Number(payBtn.dataset.amount || 0);
+        if (!amount || amount <= 0) {
+          alert('Please calculate the route to get a valid amount.');
+          return;
+        }
+
+        if (amount > maxBookingAmountInr) {
+          alert(`Total amount is too high for payment. Please keep it up to Rs ${maxBookingAmountInr.toLocaleString('en-IN')}.`);
+          return;
+        }
+
+        const purpose = document.getElementById('purpose').value || '';
+        if (!purpose.trim() && !confirm('Purpose is empty. Continue?')) return;
+
+        const res = await fetch(`/listings/book/${listing._id}/order`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount }),
+          credentials: 'same-origin'
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        if (!res.ok || !contentType.includes('application/json')) {
+          if (res.status === 401 || res.redirected) {
+            window.location.href = '/login';
+            return;
+          }
+          alert('Payment initialization failed');
+          return;
+        }
+
+        const data = await res.json();
+        if (!data.success) {
+          alert(data.error || 'Payment initialization failed');
+          return;
+        }
+
+        if (!razorpayKey) {
+          alert('Payment not configured on server.');
+          return;
+        }
+
+        const order = data.order;
+        const options = {
+          key: razorpayKey,
+          amount: order.amount,
+          currency: order.currency,
+          name: listing.title,
+          description: 'Car booking',
+          order_id: order.id,
+          handler: async function (response) {
+            try {
+              const payload = {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                pickup: pickupInput.value,
+                destination: destinationInput.value,
+                purpose: document.getElementById('purpose').value || '',
+                distanceKm: parseFloat(document.getElementById('distance').value) || 0,
+                amount: amount
+              };
+
+              const confRes = await fetch(`/listings/book/${listing._id}/confirm`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                credentials: 'same-origin'
+              });
+
+              const confContentType = confRes.headers.get('content-type') || '';
+              if (!confRes.ok || !confContentType.includes('application/json')) {
+                if (confRes.status === 401 || confRes.redirected) {
+                  window.location.href = '/login';
+                  return;
+                }
+                alert('Payment succeeded but saving booking failed');
+                return;
+              }
+
+              const conf = await confRes.json();
+              if (!conf.success) {
+                alert(conf.error || 'Payment succeeded but saving booking failed');
+                return;
+              }
+
+              if (conf.whatsappSent) {
+                alert('Payment successful. Booking confirmed and owner has been notified on WhatsApp.');
+                window.location.href = '/listings/' + listing._id;
+                return;
+              }
+
+              if (conf.whatsappReason === 'missing-recipient-number') {
+                alert('Payment successful and booking saved, but owner WhatsApp number is missing in this car listing. Please ask owner to update car details.');
+                window.location.href = '/listings/' + listing._id;
+                return;
+              }
+
+              if (conf.whatsappUrl) {
+                const shouldOpenWhatsApp = confirm('Payment successful and booking saved. Auto WhatsApp notify is not configured yet. Open WhatsApp now to send booking details to owner?');
+                if (shouldOpenWhatsApp) {
+                  window.location.href = conf.whatsappUrl;
+                  return;
+                }
+
+                window.location.href = '/listings/' + listing._id;
+                return;
+              }
+
+              alert('Payment successful and booking saved.');
+              window.location.href = '/listings/' + listing._id;
+            } catch (error) {
+              console.error(error);
+              alert('Unexpected error while confirming booking');
+            }
+          }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+      } catch (error) {
+        console.error(error);
+        alert('Unexpected error while starting payment');
+      }
+    });
+  }
+});
+</script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+<style>
+  .autocomplete-suggestions {
+    display: none;
+    border: 1px solid #ddd;
+    border-radius: 0.75rem;
+    background: #fff;
+    margin-top: 0.35rem;
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .autocomplete-item {
+    display: block;
+    width: 100%;
+    border: 0;
+    background: #fff;
+    text-align: left;
+    padding: 0.75rem 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.3;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .autocomplete-item:hover {
+    background: #f8f9fa;
+  }
+
+  .autocomplete-item:last-child {
+    border-bottom: 0;
+  }
+
+  #map {
+    border-radius: 1rem;
+    border: 1px solid #e9ecef;
+    overflow: hidden;
+  }
+
+  @media (max-width: 767.98px) {
+    #map {
+      margin-bottom: 1rem;
+    }
+  }
+</style>

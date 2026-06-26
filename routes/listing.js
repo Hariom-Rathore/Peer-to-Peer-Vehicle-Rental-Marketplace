@@ -4,6 +4,13 @@ const express = require("express");
 const router = express.Router();  //express router
 const { isLoggedIn,isOwner,validateListing } = require("../utils/middleware.js");
 const listings = require("../controllers/listing.js");
+const bookingController = require("../controllers/booking.js");
+
+// Debug: log requests hitting this router
+router.use((req, res, next) => {
+	console.log('LISTING ROUTER =>', req.method, req.path);
+	next();
+});
 
 //multer is use for upload any file 
  const multer =require('multer');
@@ -16,9 +23,21 @@ router
 	.route("/")
 	.get(listings.index)
 	.post(isLoggedIn, upload.single("listing[image]"),validateListing,  listings.createListing);
+
+router.get("/geocode", listings.geocode);
+router.get("/reverse-geocode", listings.reverseGeocode);
+router.get("/autocomplete", listings.autocomplete);
    
 
-router.get("/new",upload.single("listing[image]"), isLoggedIn, listings.renderNewForm);
+router.get("/new", isLoggedIn, listings.renderNewForm);
+
+// Booking routes (define before the generic id route to avoid accidental matching)
+// Booking routes (use /book/:id to avoid conflicting with generic '/:id' route)
+router.get('/book/:id', bookingController.renderBooking);
+// also accept the legacy /:id/book pattern to be tolerant
+router.get('/:id/book', bookingController.renderBooking);
+router.post('/book/:id/order', isLoggedIn, bookingController.createOrder);
+router.post('/book/:id/confirm', isLoggedIn, bookingController.confirmPayment);
 
 router
 .route("/:id")
