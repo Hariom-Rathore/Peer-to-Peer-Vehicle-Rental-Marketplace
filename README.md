@@ -130,31 +130,9 @@ npm start
 
 ---
 
-# 📸 Screenshots
 
-## 🏠 Home Page
 
-> *(Add Screenshot)*
 
----
-
-## 🚗 Vehicle Details
-
-> *(Add Screenshot)*
-
----
-
-## 📅 Booking Page
-
-> *(Add Screenshot)*
-
----
-
-## 👤 User Dashboard
-
-> *(Add Screenshot)*
-
----
 
 # 🌐 Live Demo
 
